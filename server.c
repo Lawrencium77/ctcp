@@ -13,30 +13,26 @@ void error(const char *msg){
 
 int main(int argc, char *argv[])
 {
-    // Initialise variables
-    int sockfd, newsockfd, portno;
+    int sockfd, portno;
     socklen_t clilen;
     char buffer[256];
-    struct sockaddr_in serv_addr, cli_addr; // Declares two objects of type struct sockaddr_in
+    struct sockaddr_in serv_addr, cli_addr; 
     int n;
 
-    
     // Parse arguments
     if (argc < 2) {
         fprintf(stderr,"ERROR, no port provided\n");
         exit(1);
     }
-    else {
-        portno = atoi(argv[1]);
-    }
+    portno = atoi(argv[1]);
 
-    // Create socket
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); // AF_INET for IPv4
+    // Create a UDP socket (instead of TCP)
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0)  {
         error("ERROR opening socket");
     }
     
-    // Setup serv_addr object
+    // Setup serv_addr
     memset((char *) &serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -48,32 +44,21 @@ int main(int argc, char *argv[])
         error("ERROR on binding");
     }
     
-    // Mark socket as passive (i.e. accepts incoming requests)
-    listen(sockfd,5);
-    
+    // Receive data (UDP is connectionless, so no listen/accept)
     clilen = sizeof(cli_addr);
-    newsockfd = accept(sockfd, 
-                (struct sockaddr *) &cli_addr, 
-                &clilen);
-    printf("Got here\n");
-    if (newsockfd < 0) 
-        error("ERROR on accept");
-
-
-    // Read data from socket into buffer
-    memset(&buffer, 0, 256);
-    n = read(newsockfd,buffer,255);
+    memset(buffer, 0, 256);
+    n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr *) &cli_addr, &clilen);
     if (n < 0) {
         error("ERROR reading from socket");
     }
-    printf("Here is the message: %s\n",buffer);
-    n = write(newsockfd,"I got your message",18);
+    printf("Here is the message: %s\n", buffer);
+
+    // Send response back to client
+    n = sendto(sockfd, "I got your message", 18, 0, (struct sockaddr *) &cli_addr, clilen);
     if (n < 0) {
         error("ERROR writing to socket");
     }
 
-    // Program cleanup
-    close(newsockfd);
     close(sockfd);
     return 0; 
 }
