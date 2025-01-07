@@ -1,68 +1,70 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h> 
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
-void error(const char *msg)
-{
-    perror(msg);
-    exit(0);
-}
-
-int main(int argc, char *argv[])
-{
-    int sockfd, portno, n;
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    char buffer[256];
-
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
-       exit(0);
-    }
-    
-    portno = atoi(argv[2]);
-    server = gethostbyname(argv[1]);
-    if (server == NULL) {
-        fprintf(stderr,"ERROR, no such host\n");
-        exit(0);
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <destination_ip> <message>\n", argv[0]);
+        exit(1);
     }
 
-    // Create a UDP socket
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0) 
-        error("ERROR opening socket");
+    // Create raw IP socket
+    int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (sockfd < 0) {
+        perror("socket creation failed");
+        exit(1);
+    }
+
+    // Tell kernel we'll include our own IP header
+    int one = 1;
+    if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
+        perror("setsockopt failed");
+        exit(1);
+    }
+
+    // Prepare IP header
+    char datagram[4096];
+    struct ip *ip_header = (struct ip *)datagram;
     
-    // Setup serv_addr
-    memset((char *) &serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-    serv_addr.sin_port = htons(portno);
+    // Zero out the packet buffer
+    memset(datagram, 0, 4096);
 
-    // For UDP, we do not connect; we just use sendto/recvfrom
-    printf("Please enter the message: ");
-    memset(buffer, 0, 256);
-    fgets(buffer, 255, stdin);
+    // Fill in the IP header
+    ip_header->ip_hl = 5;    // 5 * 32-bit words = 20 bytes
+    ip_header->ip_v = 4;     // IPv4
+    ip_header->ip_tos = 0;
+    ip_header->ip_len = sizeof(struct ip) + strlen(argv[2]);
+    ip_header->ip_id = htons(54321);
+    ip_header->ip_off = 0;
+    ip_header->ip_ttl = 64;  // Time-To-Live
+    ip_header->ip_p = IPPROTO_RAW;
+    ip_header->ip_sum = 0;   // Kernel will fill in if left at 0
+    ip_header->ip_src.s_addr = inet_addr("192.168.1.2");  // Source IP (change as needed)
+    ip_header->ip_dst.s_addr = inet_addr(argv[1]);        // Destination IP
 
-    // Send message to server
-    n = sendto(sockfd, buffer, strlen(buffer), 0,
-               (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    if (n < 0) 
-        error("ERROR writing to socket");
-    
-    // Receive message from server
-    socklen_t servlen = sizeof(serv_addr);
-    memset(buffer, 0, 256);
-    n = recvfrom(sockfd, buffer, 255, 0,
-                 (struct sockaddr *)&serv_addr, &servlen);
-    if (n < 0) 
-        error("ERROR reading from socket");
+    // Add the payload (message)
+    strcpy(datagram + sizeof(struct ip), argv[2]);
 
-    printf("%s\n", buffer);
+    // Prepare destination address
+    struct sockaddr_in dest_addr;
+    memset(&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_addr.s_addr = inet_addr(argv[1]);
+
+    // Send the packet
+    if (sendto(sockfd, datagram, ip_header->ip_len, 0,
+               (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
+        perror("sendto failed");
+        exit(1);
+    }
+
+    printf("Sent message to %s\n", argv[1]);
+
     close(sockfd);
     return 0;
 }

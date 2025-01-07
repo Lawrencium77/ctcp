@@ -2,63 +2,52 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
 
-void error(const char *msg){
-    perror(msg);
-    exit(1);
-}
-
-int main(int argc, char *argv[])
-{
-    int sockfd, portno;
-    socklen_t clilen;
-    char buffer[256];
-    struct sockaddr_in serv_addr, cli_addr; 
-    int n;
-
-    // Parse arguments
-    if (argc < 2) {
-        fprintf(stderr,"ERROR, no port provided\n");
+int main() {
+    // Create raw IP socket
+    int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (sockfd < 0) {
+        perror("socket creation failed");
         exit(1);
     }
-    portno = atoi(argv[1]);
 
-    // Create a UDP socket (instead of TCP)
-    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sockfd < 0)  {
-        error("ERROR opening socket");
+    // Tell kernel we'll include our own IP header
+    int one = 1;
+    if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
+        perror("setsockopt failed");
+        exit(1);
     }
-    
-    // Setup serv_addr
-    memset((char *) &serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
 
-    // Bind socket to server address
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
-    {
-        error("ERROR on binding");
-    }
-    
-    // Receive data (UDP is connectionless, so no listen/accept)
-    clilen = sizeof(cli_addr);
-    memset(buffer, 0, 256);
-    n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr *) &cli_addr, &clilen);
-    if (n < 0) {
-        error("ERROR reading from socket");
-    }
-    printf("Here is the message: %s\n", buffer);
+    char buffer[1024];
+    struct sockaddr_in src_addr;
+    socklen_t addr_len = sizeof(src_addr);
 
-    // Send response back to client
-    n = sendto(sockfd, "I got your message", 18, 0, (struct sockaddr *) &cli_addr, clilen);
-    if (n < 0) {
-        error("ERROR writing to socket");
+    printf("Server listening...\n");
+
+    while (1) {
+        // Receive datagram
+        ssize_t recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0,
+                                  (struct sockaddr*)&src_addr, &addr_len);
+        
+        if (recv_len < 0) {
+            perror("recvfrom failed");
+            continue;
+        }
+
+        // Skip IP header
+        struct ip* ip_header = (struct ip*)buffer;
+        int header_len = ip_header->ip_hl * 4;
+        
+        // Print the payload
+        printf("Received from %s: %s\n", 
+               inet_ntoa(src_addr.sin_addr),
+               buffer + header_len);
     }
 
     close(sockfd);
-    return 0; 
+    return 0;
 }
