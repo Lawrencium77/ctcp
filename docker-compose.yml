@@ -1,0 +1,22 @@
+services:
+  server:
+    build: .
+    cap_add:
+      - NET_RAW
+    tty: true
+    stdin_open: true
+    networks:
+      - test_network
+
+  client:
+    build: .
+    cap_add:
+      - NET_RAW
+    tty: true
+    stdin_open: true
+    networks:
+      - test_network
+
+networks:
+  test_network:
+    driver: bridge
