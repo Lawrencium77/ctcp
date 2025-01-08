@@ -16,7 +16,11 @@ struct ip* prepare_ip_header(
     ip_header->ip_ttl = 64;
     ip_header->ip_p = IPPROTO_RAW;
     ip_header->ip_sum = 0;
-    ip_header->ip_src.s_addr = INADDR_ANY;
+
+    if (inet_pton(AF_INET, "127.0.0.1", &(ip_header->ip_src)) != 1) {
+        perror("inet_pton failed for 127.0.0.1");
+        exit(1);
+    }
     
     if (inet_pton(AF_INET, dest_ip, &(ip_header->ip_dst)) != 1) {
         perror("inet_pton failed for destination address");
