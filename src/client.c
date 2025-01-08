@@ -16,7 +16,7 @@ struct ip* prepare_ip_header(
     ip_header->ip_ttl = 64;
     ip_header->ip_p = IPPROTO_RAW;
     ip_header->ip_sum = 0;
-    ip_header->ip_src.s_addr = inet_addr("localhost");
+    ip_header->ip_src.s_addr = inet_addr("127.0.0.1");
     ip_header->ip_dst.s_addr = inet_addr(dest_ip);
 
     return ip_header;
