@@ -16,9 +16,13 @@ struct ip* prepare_ip_header(
     ip_header->ip_ttl = 64;
     ip_header->ip_p = IPPROTO_RAW;
     ip_header->ip_sum = 0;
-    ip_header->ip_src.s_addr = inet_addr("127.0.0.1");
-    ip_header->ip_dst.s_addr = inet_addr(dest_ip);
-
+    ip_header->ip_src.s_addr = INADDR_ANY;
+    
+    if (inet_pton(AF_INET, dest_ip, &(ip_header->ip_dst)) != 1) {
+        perror("inet_pton failed for destination address");
+        exit(1);
+    }
+    
     return ip_header;
 }
 
@@ -34,13 +38,16 @@ struct ip* prepare_ip_packet(
     return ip_header;
 }
 
-struct sockaddr_in prepare_dest_addr(
-    const char* dest_ip
-) {
+struct sockaddr_in prepare_dest_addr(const char* dest_ip) {
     struct sockaddr_in dest_addr;
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_family = AF_INET;
-    dest_addr.sin_addr.s_addr = inet_addr(dest_ip);
+    
+    if (inet_pton(AF_INET, dest_ip, &(dest_addr.sin_addr)) != 1) {
+        perror("inet_pton failed for destination address");
+        exit(1);
+    }
+    
     return dest_addr;
 }
 
