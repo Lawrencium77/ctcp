@@ -19,19 +19,21 @@ void send_message(
     // Zero out the packet buffer
     memset(datagram, 0, 4096);
 
-    // Fill in the IP header
+    // Setup IP header
     ip_header->ip_hl = 5;    // 5 * 32-bit words = 20 bytes
     ip_header->ip_v = 4;     // IPv4
     ip_header->ip_tos = 0;
     ip_header->ip_len = sizeof(struct ip) + strlen(message);
-    ip_header->ip_id = htons(54321);
+    ip_header->ip_id = htons(54321); // All fragments of an IP packet share ID. So they can be reassembled by the receiver
     ip_header->ip_off = 0;
-    ip_header->ip_ttl = 64;  // Time-To-Live
-    ip_header->ip_p = IPPROTO_RAW;
-    ip_header->ip_sum = 0;   // Kernel will fill in if left at 0
-    ip_header->ip_src.s_addr = inet_addr("192.168.1.2");  // Source IP (change as needed)
-    ip_header->ip_dst.s_addr = inet_addr(dest_ip);        // Destination IP
-    strcpy(datagram + sizeof(struct ip), message); // Add payload to end of ip_header
+    ip_header->ip_ttl = 64;  // TTL is a counter decremented by each router the packet passes through
+    ip_header->ip_p = IPPROTO_RAW; // We're using raw IP sockets
+    ip_header->ip_sum = 0;   // Checksum. Kernel will fill in if left at 0
+    ip_header->ip_src.s_addr = inet_addr("localhost");
+    ip_header->ip_dst.s_addr = inet_addr(dest_ip);
+    
+    // Add payload to end of ip_header
+    strcpy(datagram + sizeof(struct ip), message); 
 
     // Prepare destination address
     struct sockaddr_in dest_addr;
