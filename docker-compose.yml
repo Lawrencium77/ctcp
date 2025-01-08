@@ -3,6 +3,7 @@ services:
     build: .
     cap_add:
       - NET_RAW
+      - NET_ADMIN
     tty: true
     stdin_open: true
     networks:
@@ -12,6 +13,7 @@ services:
     build: .
     cap_add:
       - NET_RAW
+      - NET_ADMIN
     tty: true
     stdin_open: true
     networks:
