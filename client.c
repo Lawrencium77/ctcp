@@ -79,26 +79,30 @@ void send_message(
     printf("Sent message to %s\n", dest_ip);
 
 }
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <destination_ip> <message>\n", argv[0]);
-        exit(1);
-    }
 
-    // Create raw IP socket
+int create_socket() {
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sockfd < 0) {
         perror("socket creation failed");
         exit(1);
     }
 
-    // Tell kernel we'll include our own IP header
     int one = 1;
     if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
         perror("setsockopt failed");
         exit(1);
     }
 
+    return sockfd;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <destination_ip> <message>\n", argv[0]);
+        exit(1);
+    }
+
+    int sockfd = create_socket();
     send_message(sockfd, argv[1], argv[2]);
     close(sockfd);
     return 0;
