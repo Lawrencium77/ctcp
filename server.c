@@ -1,29 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-
-#define BUFFER_SIZE 1024
-
-int create_socket() {
-    int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
-    if (sockfd < 0) {
-        perror("socket creation failed");
-        exit(1);
-    }
-
-    int one = 1;
-    if (setsockopt(sockfd, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one)) < 0) {
-        perror("setsockopt failed");
-        exit(1);
-    }
-
-    return sockfd;
-}
+#include "utils.h"
 
 void print_payload(
     char* buffer,
@@ -50,7 +25,7 @@ void read_loop(
         ssize_t recv_len = recvfrom(
             sockfd, 
             buffer, 
-            BUFFER_SIZE, 
+            MAX_DATAGRAM_SIZE, 
             0,
             (struct sockaddr*)&src_addr, 
             &addr_len
@@ -67,7 +42,7 @@ void read_loop(
 
 int main() {
     int sockfd = create_socket();
-    char buffer[BUFFER_SIZE];
+    char buffer[MAX_DATAGRAM_SIZE]; // Slight overestimate as buffer only needs to be as large as the largest possible *payload*
     struct sockaddr_in src_addr;
     socklen_t addr_len = sizeof(src_addr);
 
