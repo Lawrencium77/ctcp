@@ -7,43 +7,71 @@
 #include <netinet/ip.h>
 #include <arpa/inet.h>
 
+#define MAX_DATAGRAM_SIZE 4096
+
+struct ip* prepare_ip_header(
+    char* datagram,
+    const char* dest_ip,
+    const char* message
+) {
+    struct ip *ip_header = (struct ip *)datagram; // ip_header points to same addr as datagram
+
+    ip_header->ip_hl = 5;
+    ip_header->ip_v = 4;
+    ip_header->ip_tos = 0;
+    ip_header->ip_len = sizeof(struct ip) + strlen(message);
+    ip_header->ip_id = htons(54321);
+    ip_header->ip_off = 0;
+    ip_header->ip_ttl = 64;
+    ip_header->ip_p = IPPROTO_RAW;
+    ip_header->ip_sum = 0;
+    ip_header->ip_src.s_addr = inet_addr("localhost");
+    ip_header->ip_dst.s_addr = inet_addr(dest_ip);
+
+    return ip_header;
+}
+
+struct ip* prepare_ip_packet(
+    const char* dest_ip,
+    const char* message
+){
+    static char datagram[MAX_DATAGRAM_SIZE];
+    memset(datagram, 0, MAX_DATAGRAM_SIZE);
+    
+    struct ip* ip_header = prepare_ip_header(datagram, dest_ip, message);
+    strcpy(datagram + sizeof(struct ip), message);  // Add datagram payload
+    return ip_header;
+}
+
+struct sockaddr_in prepare_dest_addr(
+    const char* dest_ip
+) {
+    struct sockaddr_in dest_addr;
+    memset(&dest_addr, 0, sizeof(dest_addr));
+    dest_addr.sin_family = AF_INET;
+    dest_addr.sin_addr.s_addr = inet_addr(dest_ip);
+    return dest_addr;
+}
+
 void send_message(
     int sockfd,
     const char* dest_ip, 
     const char* message
 ) {
-    // Prepare IP header
-    char datagram[4096];
-    struct ip *ip_header = (struct ip *)datagram;
+    struct ip* ip_header = prepare_ip_packet(dest_ip, message);
+    char* datagram = (char*)ip_header;
+
+    struct sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
     
-    // Zero out the packet buffer
-    memset(datagram, 0, 4096);
-
-    // Setup IP header
-    ip_header->ip_hl = 5;    // 5 * 32-bit words = 20 bytes
-    ip_header->ip_v = 4;     // IPv4
-    ip_header->ip_tos = 0;
-    ip_header->ip_len = sizeof(struct ip) + strlen(message);
-    ip_header->ip_id = htons(54321); // All fragments of an IP packet share ID. So they can be reassembled by the receiver
-    ip_header->ip_off = 0;
-    ip_header->ip_ttl = 64;  // TTL is a counter decremented by each router the packet passes through
-    ip_header->ip_p = IPPROTO_RAW; // We're using raw IP sockets
-    ip_header->ip_sum = 0;   // Checksum. Kernel will fill in if left at 0
-    ip_header->ip_src.s_addr = inet_addr("localhost");
-    ip_header->ip_dst.s_addr = inet_addr(dest_ip);
-    
-    // Add payload to end of ip_header
-    strcpy(datagram + sizeof(struct ip), message); 
-
-    // Prepare destination address
-    struct sockaddr_in dest_addr;
-    memset(&dest_addr, 0, sizeof(dest_addr));
-    dest_addr.sin_family = AF_INET;
-    dest_addr.sin_addr.s_addr = inet_addr(dest_ip);
-
-    // Send the packet
-    if (sendto(sockfd, datagram, ip_header->ip_len, 0,
-               (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
+    if (sendto(
+            sockfd,  
+            datagram, 
+            ip_header->ip_len, 
+            0,
+            (struct sockaddr *)&dest_addr, 
+            sizeof(dest_addr)
+        ) < 0
+    ) {
         perror("sendto failed");
         exit(1);
     }
