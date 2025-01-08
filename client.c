@@ -39,7 +39,7 @@ struct ip* prepare_ip_packet(
     memset(datagram, 0, MAX_DATAGRAM_SIZE);
     
     struct ip* ip_header = prepare_ip_header(datagram, dest_ip, message);
-    strcpy(datagram + sizeof(struct ip), message);  // Add datagram payload
+    strcpy(datagram + sizeof(struct ip), message);  // Add payload
     return ip_header;
 }
 
