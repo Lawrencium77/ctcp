@@ -1,6 +1,6 @@
 CC = gcc
 BUILD_DIR = build
-SRC_DIR = src
+SRC_DIR = src/ip
 
 all: $(BUILD_DIR)/server $(BUILD_DIR)/client
 
