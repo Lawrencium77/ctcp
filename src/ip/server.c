@@ -41,7 +41,7 @@ void read_loop(
 }
 
 int main() {
-    int sockfd = create_socket();
+    int sockfd = create_ip_socket();
     char buffer[MAX_DATAGRAM_SIZE]; // Slight overestimate as buffer only needs to be as large as the largest possible *payload*
     struct sockaddr_in src_addr;
     socklen_t addr_len = sizeof(src_addr);

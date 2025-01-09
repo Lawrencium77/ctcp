@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    int sockfd = create_socket();
+    int sockfd = create_ip_socket();
     send_message(sockfd, argv[1], argv[2]);
     close(sockfd);
     return 0;
