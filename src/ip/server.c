@@ -4,7 +4,6 @@ void print_payload(
     char* buffer,
     struct sockaddr_in src_addr
 ){
-    // Skip header
     struct ip* ip_header = (struct ip*)buffer;
     int header_len = ip_header->ip_hl * 4;
     
