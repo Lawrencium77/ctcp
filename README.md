@@ -5,19 +5,19 @@
 To build the Docker image and run two containers, do
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 In separate terminals, then do:
 
 ```bash
-docker-compose exec server tc qdisc add dev eth0 root netem loss 50%   # Adjust packet loss as you wish
-docker-compose exec server bash
+docker compose exec server tc qdisc add dev eth0 root netem loss 50%   # Adjust packet loss as you wish
+docker compose exec server bash
 ```
 
 ```bash
-docker-compose exec client tc qdisc add dev eth0 root netem loss 50%    # Adjust packet loss as you wish
-docker-compose exec client bash
+docker compose exec client tc qdisc add dev eth0 root netem loss 50%    # Adjust packet loss as you wish
+docker compose exec client bash
 ```
 
 To launch the server process from inside the container, do:
@@ -41,5 +41,5 @@ Note that, for a packet being transferred from client to server, the chance of s
 To clear up, do
 
 ```bash
-docker-compose down
+docker compose down
 ```
