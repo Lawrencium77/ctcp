@@ -4,4 +4,4 @@ RUN apt-get update && apt-get install -y build-essential && apt-get install -y d
 WORKDIR /app
 COPY . /app
 
-RUN make
+RUN make clean && make
