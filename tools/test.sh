@@ -8,9 +8,9 @@ MESSAGE="Hello World"
 function show_help {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  -l, --loss PERCENTAGE       Set packet loss percentage (default: 50)"
-    echo "  -c, --corruption PERCENTAGE Set packet corruption percentage (default: 50)"
-    echo "  -m, --message MESSAGE       Message to send (default: 'Hello, World!')"
+    echo "  -l, --loss PERCENTAGE       Packet loss percentage"
+    echo "  -c, --corruption PERCENTAGE Packet corruption percentage"
+    echo "  -m, --message MESSAGE       Message to send"
     echo "  -h, --help                  Show this help message"
     exit 0
 }
