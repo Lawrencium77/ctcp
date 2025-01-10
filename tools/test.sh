@@ -50,9 +50,6 @@ trap cleanup EXIT
 echo "Starting containers..."
 docker compose up -d
 
-# Wait for containers to be ready
-sleep 5
-
 echo "Configuring server network conditions..."
 docker compose exec -T server tc qdisc add dev eth0 root netem loss ${PACKET_LOSS}% corrupt ${PACKET_CORRUPTION}%
 
@@ -64,9 +61,6 @@ docker compose exec -d server bash -c "cd /app && build/udp/server"
 
 echo "Getting server IP..."
 SERVER_IP=$(docker compose exec -T client nslookup server | grep "Address" | tail -n1 | awk '{print $2}')
-
-# Wait for server to be ready
-sleep 2
 
 echo "Sending message from client process..."
 docker compose exec -T client bash -c "cd /app && build/udp/client ${SERVER_IP} \"${MESSAGE}\""
