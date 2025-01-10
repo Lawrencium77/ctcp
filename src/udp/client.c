@@ -7,10 +7,10 @@ struct udphdr* prepare_udp_header(
 ) {
     struct udphdr* udp_header = (struct udphdr*)datagram;
 
-    udp_header->uh_sport = PORT_NUMBER; 
-    udp_header->uh_dport = PORT_NUMBER; 
-    udp_header->uh_ulen = sizeof(struct udphdr) + strlen(message);
-    udp_header->uh_sum = get_checksum(message);
+    udp_header->uh_sport = htons(PORT_NUMBER);
+    udp_header->uh_dport = htons(PORT_NUMBER);
+    udp_header->uh_ulen = htons(sizeof(struct udphdr) + strlen(message));
+    udp_header->uh_sum = htons(get_checksum(message));
 
     return udp_header;
 }
@@ -25,7 +25,7 @@ struct ip* prepare_ip_header(
     ip_header->ip_hl = 5;
     ip_header->ip_v = 4;
     ip_header->ip_tos = 0;
-    ip_header->ip_len = sizeof(struct ip) + udp_datagram->uh_ulen;
+    ip_header->ip_len = htons(sizeof(struct ip) + udp_datagram->uh_ulen);
     ip_header->ip_id = htons(54321);
     ip_header->ip_off = 0;
     ip_header->ip_ttl = 64;

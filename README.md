@@ -11,12 +11,14 @@ docker compose up
 In separate terminals, then do:
 
 ```bash
-docker compose exec server tc qdisc add dev eth0 root netem loss 50%   # Adjust packet loss as you wish
+docker compose exec server tc qdisc add dev eth0 root netem loss 50%   # Adjust packet loss as needed
+docker compose exec server tc qdisc add dev eth0 root netem corrupt 50%   # Adjust packet corruption as needed
 docker compose exec server bash
 ```
 
 ```bash
 docker compose exec client tc qdisc add dev eth0 root netem loss 50%    # Adjust packet loss as you wish
+docker compose exec client tc qdisc add dev eth0 root netem corrupt 50%   # Adjust packet corruption as needed
 docker compose exec client bash
 ```
 

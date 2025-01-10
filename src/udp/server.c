@@ -11,10 +11,19 @@ void print_payload(
     // Skip UDP header
     struct udphdr* udp_header = (struct udphdr*)(buffer + header_len); 
     header_len += sizeof(struct udphdr);
-    
-    printf("Received from %s: %s\n", 
+
+    // Checksum verification
+    size_t message_length = udp_header->uh_ulen - sizeof(struct udphdr);
+    u_short checksum_host_order = get_checksum(buffer + header_len);
+    u_short checksum_network_order = htons(checksum_host_order);
+    if (checksum_network_order != udp_header->uh_sum) {
+        printf("Checksum verification failed\n");
+    }
+    else {
+        printf("Received from %s: %s\n", 
             inet_ntoa(src_addr.sin_addr),
             buffer + header_len);
+    }
 }
 
 void read_loop(
