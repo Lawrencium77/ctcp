@@ -39,17 +39,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-cleanup() {
-    echo "Cleaning up..."
-    docker compose down
-    exit 0
-}
-
-trap cleanup EXIT
-
-echo "Starting app containers..."
-docker compose up -d
-
 echo "Configuring server network conditions..."
 docker compose exec -T server tc qdisc add dev eth0 root netem loss ${PACKET_LOSS}% corrupt ${PACKET_CORRUPTION}%
 
