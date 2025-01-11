@@ -4,6 +4,7 @@ set -euo pipefail
 PACKET_LOSS=50
 PACKET_CORRUPTION=50
 MESSAGE="Hello World"
+PROTOCOL="udp"
 
 function show_help {
     echo "Usage: $0 [OPTIONS]"
@@ -11,6 +12,7 @@ function show_help {
     echo "  -l, --loss PERCENTAGE       Packet loss percentage"
     echo "  -c, --corruption PERCENTAGE Packet corruption percentage"
     echo "  -m, --message MESSAGE       Message to send"
+    echo "  -p, --protocol PROTOCOL     Protocol to use (udp/tcp)"
     echo "  -h, --help                  Show this help message"
     exit 0
 }
@@ -27,6 +29,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -m|--message)
             MESSAGE="$2"
+            shift 2
+            ;;
+        -p|--protocol)
+            PROTOCOL="$2"
             shift 2
             ;;
         -h|--help)
@@ -57,13 +63,13 @@ echo "Configuring client network conditions..."
 docker compose exec -T client tc qdisc add dev eth0 root netem loss ${PACKET_LOSS}% corrupt ${PACKET_CORRUPTION}%
 
 echo "Starting server..."
-docker compose exec -d server bash -c "cd /app && build/udp/server"
+docker compose exec -d server bash -c "cd /app && build/${PROTOCOL}/server"
 
 echo "Getting server IP..."
 SERVER_IP=$(docker compose exec -T client nslookup server | grep "Address" | tail -n1 | awk '{print $2}')
 
 echo "Sending message from client process..."
-docker compose exec -T client bash -c "cd /app && build/udp/client ${SERVER_IP} \"${MESSAGE}\""
+docker compose exec -T client bash -c "cd /app && build/${PROTOCOL}/client ${SERVER_IP} \"${MESSAGE}\""
 
 echo "Test running. Press Ctrl+C to stop and cleanup."
 while true; do
