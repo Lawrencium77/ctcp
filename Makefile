@@ -7,11 +7,9 @@ ifdef DEBUG
     CFLAGS += -g -DDEBUG
 endif
 
-all: ip udp
+all: ip
 
 ip: $(BUILD_DIR)/ip/server $(BUILD_DIR)/ip/client
-
-udp: $(BUILD_DIR)/udp/server $(BUILD_DIR)/udp/client
 
 $(BUILD_DIR)/ip/server: $(IP_DIR)/server.c | $(BUILD_DIR)/ip
 	$(CC) $(CFLAGS) $(IP_DIR)/server.c -o $(BUILD_DIR)/ip/server -I $(IP_DIR)
@@ -25,4 +23,4 @@ $(BUILD_DIR)/ip:
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean ip udp
+.PHONY: all clean ip
