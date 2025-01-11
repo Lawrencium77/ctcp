@@ -10,7 +10,7 @@ struct ip* prepare_ip_header(
     ip_header->ip_hl = 5;
     ip_header->ip_v = 4;
     ip_header->ip_tos = 0;
-    ip_header->ip_len = sizeof(struct ip) + strlen(message);
+    ip_header->ip_len = htons(sizeof(struct ip) + strlen(message));
     ip_header->ip_id = htons(54321);
     ip_header->ip_off = 0;
     ip_header->ip_ttl = 64;
