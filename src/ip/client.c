@@ -5,7 +5,7 @@ struct ip* prepare_ip_header(
     const char* dest_ip,
     const char* message
 ) {
-    struct ip *ip_header = (struct ip *)datagram; // ip_header points to same addr as datagram
+    struct ip *ip_header = (struct ip *)datagram;
 
     ip_header->ip_hl = 5;
     ip_header->ip_v = 4;
