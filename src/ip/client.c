@@ -5,14 +5,14 @@ struct ip* prepare_ip_header(
     const char* dest_ip,
     const char* message
 ) {
-    struct ip *ip_header = (struct ip *)datagram; // ip_header points to same addr as datagram
+    struct ip *ip_header = (struct ip *)datagram;
 
     ip_header->ip_hl = 5;
     ip_header->ip_v = 4;
     ip_header->ip_tos = 0;
-    ip_header->ip_len = sizeof(struct ip) + strlen(message);
+    ip_header->ip_len = htons(sizeof(struct ip) + strlen(message));
     ip_header->ip_id = htons(54321);
-    ip_header->ip_off = 0;
+    ip_header->ip_off = htons(0);
     ip_header->ip_ttl = 64;
     ip_header->ip_p = IPPROTO_RAW;
     ip_header->ip_sum = 0;
@@ -68,7 +68,7 @@ void send_message(
     if (sendto(
             sockfd,  
             datagram, 
-            ip_header->ip_len, 
+            ntohs(ip_header->ip_len),
             0,
             (struct sockaddr *)&dest_addr, 
             sizeof(dest_addr)
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    int sockfd = create_socket();
+    int sockfd = create_ip_socket();
     send_message(sockfd, argv[1], argv[2]);
     close(sockfd);
     return 0;

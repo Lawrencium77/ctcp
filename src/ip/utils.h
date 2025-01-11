@@ -9,7 +9,7 @@
 
 #define MAX_DATAGRAM_SIZE 4096
 
-int create_socket() {
+int create_ip_socket() {
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sockfd < 0) {
         perror("socket creation failed");

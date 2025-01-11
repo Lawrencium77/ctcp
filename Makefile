@@ -1,19 +1,28 @@
 CC = gcc
 BUILD_DIR = build
-SRC_DIR = src
+IP_DIR = src/ip
 
-all: $(BUILD_DIR)/server $(BUILD_DIR)/client
+# Add debug flags if DEBUG is set
+ifdef DEBUG
+    CFLAGS += -g -DDEBUG
+endif
 
-$(BUILD_DIR)/server: $(SRC_DIR)/server.c | $(BUILD_DIR)
-	$(CC) $(SRC_DIR)/server.c -o $(BUILD_DIR)/server -I $(SRC_DIR)
+all: ip udp
 
-$(BUILD_DIR)/client: $(SRC_DIR)/client.c | $(BUILD_DIR)
-	$(CC) $(SRC_DIR)/client.c -o $(BUILD_DIR)/client -I $(SRC_DIR)
+ip: $(BUILD_DIR)/ip/server $(BUILD_DIR)/ip/client
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+udp: $(BUILD_DIR)/udp/server $(BUILD_DIR)/udp/client
+
+$(BUILD_DIR)/ip/server: $(IP_DIR)/server.c | $(BUILD_DIR)/ip
+	$(CC) $(CFLAGS) $(IP_DIR)/server.c -o $(BUILD_DIR)/ip/server -I $(IP_DIR)
+
+$(BUILD_DIR)/ip/client: $(IP_DIR)/client.c | $(BUILD_DIR)/ip
+	$(CC) $(CFLAGS) $(IP_DIR)/client.c -o $(BUILD_DIR)/ip/client -I $(IP_DIR)
+
+$(BUILD_DIR)/ip:
+	mkdir -p $(BUILD_DIR)/ip
 
 clean:
 	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean
+.PHONY: all clean ip udp
