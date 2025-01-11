@@ -10,7 +10,7 @@ function show_help {
     echo "Options:"
     echo "  -l, --loss PERCENTAGE       Packet loss percentage"
     echo "  -c, --corruption PERCENTAGE Packet corruption percentage"
-    echo "  -p, --protocol PROTOCOL     Protocol to use (udp/tcp)"
+    echo "  -p, --protocol PROTOCOL     Protocol to use (ip/udp/tcp)"
     echo "  -h, --help                  Show this help message"
     exit 0
 }
