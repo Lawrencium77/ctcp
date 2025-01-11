@@ -1,0 +1,22 @@
+{
+    "name": "Networking Dev",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "server", // VSCode attaches to the server container
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-azuretools.vscode-docker",
+                "ms-vscode.cmake-tools"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+    "remoteUser": "root",
+    "init": true
+}

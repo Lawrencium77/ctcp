@@ -8,6 +8,10 @@ services:
     stdin_open: true
     networks:
       - test_network
+    volumes:
+      - .:/app
+      - ~/.vscode-server:/root/.vscode-server
+    command: sh -c "make clean && make && tail -f /dev/null" # Build only happens in one container. Other containers will share via volume mount.
 
   client:
     build: .
@@ -18,6 +22,9 @@ services:
     stdin_open: true
     networks:
       - test_network
+    volumes:
+      - .:/app
+      - ~/.vscode-server:/root/.vscode-server
 
 networks:
   test_network:
