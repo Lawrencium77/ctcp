@@ -1,37 +1,17 @@
 # ctcp
 
-## How to Use
+## How to Test
 
-To build the Docker image and run two containers, do
-
-```bash
-docker compose up
-```
-
-In separate terminals, then do:
+To build the Docker image and launch the server and client containers, do
 
 ```bash
-docker compose exec server tc qdisc add dev eth0 root netem loss 50%   # Adjust packet loss as needed
-docker compose exec server tc qdisc add dev eth0 root netem corrupt 50%   # Adjust packet corruption as needed
-docker compose exec server bash
+tools/test/server.sh
 ```
+
+In a separate terminal, then run the client process:
 
 ```bash
-docker compose exec client tc qdisc add dev eth0 root netem loss 50%    # Adjust packet loss as you wish
-docker compose exec client tc qdisc add dev eth0 root netem corrupt 50%   # Adjust packet corruption as needed
-docker compose exec client bash
-```
-
-To launch the server process from inside the container, do:
-
-```bash
-build/server
-```
-
-To run the client, run `nslookup server` to obtain the IP address of the server container. Then do
-
-```
-build/server <ip_addr> <message>
+tools/test/client.sh
 ```
 
 Note that, for a packet being transferred from client to server, the chance of successful transmission is:
@@ -40,8 +20,4 @@ Note that, for a packet being transferred from client to server, the chance of s
 (server-side packet loss) x (client-side packet loss)
 ```
 
-To clear up, do
-
-```bash
-docker compose down
-```
+To clear up, simply kill the `server.sh` process. This will call `docker compose down` to stop and remove running containers.
