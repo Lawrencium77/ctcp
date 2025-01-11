@@ -1,8 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-PACKET_LOSS=0
-PACKET_CORRUPTION=0
 PROTOCOL="ip"
 
 function show_help {
@@ -17,14 +15,6 @@ function show_help {
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -l|--loss)
-            PACKET_LOSS="$2"
-            shift 2
-            ;;
-        -c|--corruption)
-            PACKET_CORRUPTION="$2"
-            shift 2
-            ;;
         -p|--protocol)
             PROTOCOL="$2"
             shift 2
@@ -38,12 +28,6 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-
-echo "Configuring server network conditions..."
-docker compose exec -T server tc qdisc add dev eth0 root netem loss ${PACKET_LOSS}% corrupt ${PACKET_CORRUPTION}%
-
-echo "Configuring client network conditions..."
-docker compose exec -T client tc qdisc add dev eth0 root netem loss ${PACKET_LOSS}% corrupt ${PACKET_CORRUPTION}%
 
 echo "Starting server..."
 docker compose exec server bash -c "cd /app && build/${PROTOCOL}/server"

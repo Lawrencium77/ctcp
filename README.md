@@ -14,13 +14,25 @@ containers, and attach a VSCode instance to the server container. Volume mounts 
 Once both containers are running, you can test the client-server interaction by doing:
 
 ```bash
+tools/test/set_conditions.sh
+```
+
+to set packet loss and corruption rates. Next, run
+
+```bash
 tools/test/server.sh
 ```
 
-to launch the server process. In a separate terminal, run the client process:
+to launch the server process. In a separate terminal, then run the client process:
 
 ```bash
 tools/test/client.sh
+```
+
+Finally, we can reset the network conditions by running:
+
+```bash
+tools/test/set_conditions.sh --reset
 ```
 
 Note that, for a packet being transferred from client to server, the chance of successful transmission is:
