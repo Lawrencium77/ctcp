@@ -1,3 +1,4 @@
+#include "packet_types.h"
 #include "utils.h"
 
 struct udp_packet* prepare_udp_packet(

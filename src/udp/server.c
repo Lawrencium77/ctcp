@@ -1,6 +1,7 @@
+#include "packet_types.h"
 #include "utils.h"
 
-void print_payload(
+static void print_payload(
     char* buffer,
     struct sockaddr_in src_addr
 ){
@@ -12,7 +13,7 @@ void print_payload(
             buffer + ip_header_len + sizeof(struct udp_header));
 }
 
-void read_loop(
+static void read_loop(
     int sockfd,
     struct sockaddr_in src_addr,
     socklen_t addr_len
