@@ -1,3 +1,4 @@
+#include "checksum.h"
 #include "packet_types.h"
 #include "utils.h"
 
@@ -48,6 +49,13 @@ struct ip* prepare_ip_header(
     return ip_header;
 }
 
+void set_udp_checksum(
+    struct ip* ip_header,
+    struct udp_packet* udp_packet
+) {
+    udp_packet->header.checksum = calculate_udp_checksum(ip_header, udp_packet);
+}
+
 struct ip* prepare_ip_packet(
     const char* dest_ip,
     struct udp_packet* udp_packet
@@ -56,6 +64,7 @@ struct ip* prepare_ip_packet(
     memset(datagram, 0, MAX_DATAGRAM_SIZE);
     
     struct ip* ip_header = prepare_ip_header(datagram, dest_ip, udp_packet);
+    set_udp_checksum(ip_header, udp_packet);
     memcpy(datagram + sizeof(struct ip), udp_packet, udp_packet->header.length);   // Add payload
 
     return ip_header;

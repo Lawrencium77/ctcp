@@ -24,10 +24,10 @@ $(BUILD_DIR)/ip:
 	mkdir -p $(BUILD_DIR)/ip
 
 $(BUILD_DIR)/udp/server: $(UDP_DIR)/server.c | $(BUILD_DIR)/udp
-	$(CC) $(CFLAGS) $(UDP_DIR)/server.c -o $(BUILD_DIR)/udp/server -I $(SRC_DIR) -I $(UDP_DIR)
+	$(CC) $(CFLAGS) $(UDP_DIR)/server.c $(UDP_DIR)/checksum.c -o $(BUILD_DIR)/udp/server -I $(SRC_DIR) -I $(UDP_DIR)
 
 $(BUILD_DIR)/udp/client: $(UDP_DIR)/client.c | $(BUILD_DIR)/udp
-	$(CC) $(CFLAGS) $(UDP_DIR)/client.c -o $(BUILD_DIR)/udp/client -I $(SRC_DIR) -I $(UDP_DIR)
+	$(CC) $(CFLAGS) $(UDP_DIR)/client.c $(UDP_DIR)/checksum.c -o $(BUILD_DIR)/udp/client -I $(SRC_DIR) -I $(UDP_DIR)
 
 $(BUILD_DIR)/udp:
 	mkdir -p $(BUILD_DIR)/udp
