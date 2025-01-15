@@ -3,14 +3,15 @@
 #include "utils.h"
 
 struct udp_packet* prepare_udp_packet(
-    const char* message
+    const char* message,
+    const char* dest_port
 ) {
     static char packet[MAX_DATAGRAM_SIZE];
     memset(packet, 0, MAX_DATAGRAM_SIZE);
-    
+
     struct udp_packet* udp_packet = (struct udp_packet*)packet;
-    udp_packet->header.src_port = 12345;
-    udp_packet->header.dest_port = 12345;
+    udp_packet->header.src_port = 0;
+    udp_packet->header.dest_port = atoi(dest_port);
     udp_packet->header.length = sizeof(struct udp_header) + strlen(message);
     udp_packet->header.checksum = 0;
 
@@ -86,9 +87,10 @@ struct sockaddr_in prepare_dest_addr(const char* dest_ip) {
 void send_message(
     int sockfd,
     const char* dest_ip, 
+    const char* dest_port,
     const char* message
 ) {
-    struct udp_packet* udp_packet = prepare_udp_packet(message);
+    struct udp_packet* udp_packet = prepare_udp_packet(message, dest_port);
     struct ip* ip_header = prepare_ip_packet(dest_ip, udp_packet);
     char* datagram = (char*)ip_header;
 
@@ -113,13 +115,13 @@ void send_message(
 
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <destination_ip> <message>\n", argv[0]);
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s <destination_ip> <dest_port> <message>\n", argv[0]);
         exit(1);
     }
 
     int sockfd = create_ip_socket();
-    send_message(sockfd, argv[1], argv[2]);
+    send_message(sockfd, argv[1], argv[2], argv[3]);
     close(sockfd);
     return 0;
 }
