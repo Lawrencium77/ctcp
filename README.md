@@ -41,4 +41,4 @@ Note that, for a packet being transferred from client to server, the chance of s
 (server-side packet loss) x (client-side packet loss)
 ```
 
-and likewise for packet corruption. 
+and likewise for packet corruption. Note that packet corruption can cause packet loss even without explicit loss settings, since IP drops any packets with corrupted headers.
