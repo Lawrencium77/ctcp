@@ -2,7 +2,7 @@
 
 ## How To Use This Code
 
-### Development
+### Development
 
 First, install the [Dev Containers VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers). This will allow you attach a VSCode instance to a Docker container possessing the project code. See the [VSCode docs](https://code.visualstudio.com/docs/devcontainers/containers) for more detail.
 
@@ -17,7 +17,7 @@ Once both containers are running, you can test the client-server interaction by 
 tools/test/set_conditions.sh
 ```
 
-to set packet loss and corruption rates. Next, run
+to set packet loss and corrupt  ion rates. Next, run
 
 ```bash
 tools/test/server.sh
