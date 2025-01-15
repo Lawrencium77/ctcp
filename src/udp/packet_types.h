@@ -12,7 +12,7 @@ struct udp_header {
 
 struct udp_packet {
     struct udp_header header;
-    char payload[]; // flexible array member
+    char payload[];
 };
 
 #endif
