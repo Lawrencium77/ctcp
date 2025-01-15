@@ -1,4 +1,5 @@
 #include "utils.h"
+#include <string.h>
 
 struct ip* prepare_ip_header(
     char* datagram,

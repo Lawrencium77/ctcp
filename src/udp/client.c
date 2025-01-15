@@ -1,6 +1,7 @@
 #include "checksum.h"
 #include "packet_types.h"
 #include "utils.h"
+#include <string.h>
 
 struct udp_packet* prepare_udp_packet(
     const char* message,
