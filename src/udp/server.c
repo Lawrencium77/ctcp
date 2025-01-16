@@ -20,7 +20,7 @@ int validate_udp_checksum(
 
 static void print_payload(
     char* buffer,
-    struct sockaddr_in src_addr
+    sockaddr_in src_addr
 ){
     ip* ip_header = (ip*)buffer;
     int ip_header_len = ip_header->ip_hl * 4;
@@ -39,7 +39,7 @@ static void print_payload(
 
 static void read_loop(
     int sockfd,
-    struct sockaddr_in src_addr,
+    sockaddr_in src_addr,
     socklen_t addr_len
 ) {
     printf("Server listening...\n");
@@ -53,7 +53,7 @@ static void read_loop(
             buffer, 
             MAX_DATAGRAM_SIZE, 
             0,
-            (struct sockaddr*)&src_addr, 
+            (sockaddr*)&src_addr, 
             &addr_len
         );
         
@@ -68,7 +68,7 @@ static void read_loop(
 
 int main() {
     int sockfd = create_ip_socket();
-    struct sockaddr_in src_addr;
+    sockaddr_in src_addr;
     socklen_t addr_len = sizeof(src_addr);
 
     read_loop(sockfd, src_addr, addr_len);

@@ -72,8 +72,8 @@ ip* prepare_ip_packet(
     return ip_header;
 }
 
-struct sockaddr_in prepare_dest_addr(const char* dest_ip) {
-    struct sockaddr_in dest_addr;
+sockaddr_in prepare_dest_addr(const char* dest_ip) {
+    sockaddr_in dest_addr;
     memset(&dest_addr, 0, sizeof(dest_addr));
     dest_addr.sin_family = AF_INET;
     
@@ -95,14 +95,14 @@ void send_message(
     ip* ip_header = prepare_ip_packet(dest_ip, udp_packet);
     char* datagram = (char*)ip_header;
 
-    struct sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
+    sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
     
     if (sendto(
             sockfd,  
             datagram, 
             ntohs(ip_header->ip_len),
             0,
-            (struct sockaddr *)&dest_addr, 
+            (sockaddr *)&dest_addr, 
             sizeof(dest_addr)
         ) < 0
     ) {

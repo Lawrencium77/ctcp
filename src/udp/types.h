@@ -5,6 +5,8 @@
 #include <stdint.h>
 
 typedef struct ip ip;
+typedef struct sockaddr sockaddr;
+typedef struct sockaddr_in sockaddr_in;
 
 typedef struct {
     uint16_t src_port;
