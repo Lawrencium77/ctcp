@@ -4,7 +4,7 @@
 
 int validate_udp_checksum(
     struct ip* ip_header,
-    struct udp_packet* udp_packet
+    udp_datagram* udp_packet
 ) {
     uint16_t client_checksum = udp_packet->header.checksum;
     uint16_t server_checksum = calculate_udp_checksum(ip_header, udp_packet);
@@ -25,14 +25,14 @@ static void print_payload(
     struct ip* ip_header = (struct ip*)buffer;
     int ip_header_len = ip_header->ip_hl * 4;
 
-    struct udp_packet* udp_packet = (struct udp_packet*)(buffer + ip_header_len);
+    udp_datagram* udp_packet = (udp_datagram*)(buffer + ip_header_len);
     int valid_checkum = validate_udp_checksum(ip_header, udp_packet);
 
     if (valid_checkum == 0) {
         printf(
             "Received from %s: %s\n", 
             inet_ntoa(src_addr.sin_addr),
-            buffer + ip_header_len + sizeof(struct udp_header)
+            buffer + ip_header_len + sizeof(udp_header)
         );
     };
 }
