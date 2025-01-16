@@ -1,5 +1,5 @@
 #include "checksum.h"
-#include "packet_types.h"
+#include "types.h"
 #include "utils.h"
 #include <string.h>
 
@@ -20,18 +20,18 @@ udp_datagram* prepare_udp_packet(
     return udp_packet;
 }
 
-struct ip* prepare_ip_header(
+ip* prepare_ip_header(
     char* datagram,
     const char* dest_ip,
     udp_datagram* udp_packet
 ) {
-    struct ip *ip_header = (struct ip *)datagram;
+    ip *ip_header = (ip *)datagram;
     uint16_t udp_packet_length = udp_packet->header.length;
 
     ip_header->ip_hl = 5;
     ip_header->ip_v = 4;
     ip_header->ip_tos = 0;
-    ip_header->ip_len = htons(sizeof(struct ip) + udp_packet_length);
+    ip_header->ip_len = htons(sizeof(ip) + udp_packet_length);
     ip_header->ip_id = htons(54321);
     ip_header->ip_off = htons(0);
     ip_header->ip_ttl = 64;
@@ -52,22 +52,22 @@ struct ip* prepare_ip_header(
 }
 
 void set_udp_checksum(
-    struct ip* ip_header,
+    ip* ip_header,
     udp_datagram* udp_packet
 ) {
     udp_packet->header.checksum = calculate_udp_checksum(ip_header, udp_packet);
 }
 
-struct ip* prepare_ip_packet(
+ip* prepare_ip_packet(
     const char* dest_ip,
     udp_datagram* udp_packet
 ){
     static char datagram[MAX_DATAGRAM_SIZE];
     memset(datagram, 0, MAX_DATAGRAM_SIZE);
     
-    struct ip* ip_header = prepare_ip_header(datagram, dest_ip, udp_packet);
+    ip* ip_header = prepare_ip_header(datagram, dest_ip, udp_packet);
     set_udp_checksum(ip_header, udp_packet);
-    memcpy(datagram + sizeof(struct ip), udp_packet, udp_packet->header.length);   // Add payload
+    memcpy(datagram + sizeof(ip), udp_packet, udp_packet->header.length);   // Add payload
 
     return ip_header;
 }
@@ -92,7 +92,7 @@ void send_message(
     const char* message
 ) {
     udp_datagram* udp_packet = prepare_udp_packet(message, dest_port);
-    struct ip* ip_header = prepare_ip_packet(dest_ip, udp_packet);
+    ip* ip_header = prepare_ip_packet(dest_ip, udp_packet);
     char* datagram = (char*)ip_header;
 
     struct sockaddr_in dest_addr = prepare_dest_addr(dest_ip);

@@ -1,7 +1,10 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <netinet/ip.h>
 #include <stdint.h>
+
+typedef struct ip ip;
 
 typedef struct {
     uint16_t src_port;

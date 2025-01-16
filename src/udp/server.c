@@ -1,9 +1,9 @@
 #include "checksum.h"
-#include "packet_types.h"
+#include "types.h"
 #include "utils.h"
 
 int validate_udp_checksum(
-    struct ip* ip_header,
+    ip* ip_header,
     udp_datagram* udp_packet
 ) {
     uint16_t client_checksum = udp_packet->header.checksum;
@@ -22,7 +22,7 @@ static void print_payload(
     char* buffer,
     struct sockaddr_in src_addr
 ){
-    struct ip* ip_header = (struct ip*)buffer;
+    ip* ip_header = (ip*)buffer;
     int ip_header_len = ip_header->ip_hl * 4;
 
     udp_datagram* udp_packet = (udp_datagram*)(buffer + ip_header_len);

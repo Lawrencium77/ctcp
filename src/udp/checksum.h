@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "packet_types.h"
+#include "types.h"
 #include <netinet/ip.h>
 
 typedef struct __attribute__((packed)) {
@@ -10,4 +10,4 @@ typedef struct __attribute__((packed)) {
         uint16_t udp_length;
     } udp_pseudo_header;
 
-uint16_t calculate_udp_checksum(struct ip* ip_header, udp_datagram* udp_packet);
+uint16_t calculate_udp_checksum(ip* ip_header, udp_datagram* udp_packet);

@@ -4,7 +4,7 @@
 
 // See https://en.wikipedia.org/wiki/User_Datagram_Protocol#Checksum_computation
 uint16_t calculate_udp_checksum(
-    struct ip* ip_header, 
+    ip* ip_header, 
     udp_datagram* udp_packet
 ) {
     uint32_t checksum = 0;
