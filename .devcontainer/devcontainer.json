@@ -9,9 +9,10 @@
         "vscode": {
             "extensions": [
                 "llvm-vs-code-extensions.vscode-clangd",
-                "ms-azuretools.vscode-docker",
                 "ms-vscode.cmake-tools",
-                "ms-vscode.makefile-tools"
+                "ms-vscode.cpptools",
+                "ms-vscode.makefile-tools",
+                "ms-azuretools.vscode-docker"
             ]
         }
     },
