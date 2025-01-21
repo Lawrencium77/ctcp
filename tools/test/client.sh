@@ -2,14 +2,14 @@
 set -euo pipefail
 
 MESSAGE="Hello World"
-PROTOCOL="ip"
+PROTOCOL="udp"
 PORT="12345"
 
 function show_help {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  -m, --message MESSAGE       Message to send"
-    echo "  -p, --protocol PROTOCOL     Protocol to use (ip/udp/tcp)"
+    echo "  -p, --protocol PROTOCOL     Protocol to use (ip/udp)"
     echo "  -P, --port PORT             Port to use"
     echo "  -h, --help                  Show this help message"
     exit 0
