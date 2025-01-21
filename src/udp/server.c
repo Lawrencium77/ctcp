@@ -1,78 +1,64 @@
-#include "checksum.h"
-#include "types.h"
-#include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
-int validate_udp_checksum(
-    ip* ip_header,
-    udp_datagram* udp_packet
-) {
-    uint16_t client_checksum = udp_packet->header.checksum;
-    uint16_t server_checksum = calculate_udp_checksum(ip_header, udp_packet);
+#define DAEMON_SOCK_PATH "/tmp/daemon_sock"
 
-    if (client_checksum == server_checksum) {
-        printf("Checksums match\n");
-        return 0;
-    } else {
-        printf("Checksums do not match\n");
-        return 1;
+int main(int argc, char *argv[])
+{
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <port>\n", argv[0]);
+        exit(EXIT_FAILURE);
     }
-}
+    int port = atoi(argv[1]);
 
-static void print_payload(
-    char* buffer,
-    sockaddr_in src_addr
-){
-    ip* ip_header = (ip*)buffer;
-    int ip_header_len = ip_header->ip_hl * 4;
+    int sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock_fd < 0) {
+        perror("socket(AF_UNIX)");
+        exit(EXIT_FAILURE);
+    }
 
-    udp_datagram* udp_packet = (udp_datagram*)(buffer + ip_header_len);
-    int valid_checkum = validate_udp_checksum(ip_header, udp_packet);
+    struct sockaddr_un daemon_addr;
+    memset(&daemon_addr, 0, sizeof(daemon_addr));
+    daemon_addr.sun_family = AF_UNIX;
+    strncpy(daemon_addr.sun_path, DAEMON_SOCK_PATH, sizeof(daemon_addr.sun_path) - 1);
 
-    if (valid_checkum == 0) {
-        printf(
-            "Received from %s: %s\n", 
-            inet_ntoa(src_addr.sin_addr),
-            buffer + ip_header_len + sizeof(udp_header)
-        );
-    };
-}
+    if (connect(sock_fd, (struct sockaddr *)&daemon_addr, sizeof(daemon_addr)) < 0) {
+        perror("connect to daemon");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
 
-static void read_loop(
-    int sockfd,
-    sockaddr_in src_addr,
-    socklen_t addr_len
-) {
-    printf("Server listening...\n");
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d", port);
+    ssize_t n = write(sock_fd, buf, strlen(buf));
+    if (n < 0) {
+        perror("write(port) to daemon");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
 
-    // Slight overestimate as buffer only needs to be as large as the largest possible *payload*
-    char buffer[MAX_DATAGRAM_SIZE];
-    
+    printf("server: Bound to port=%d (user-level). Waiting for data...\n", port);
+
     while (1) {
-        ssize_t recv_len = recvfrom(
-            sockfd, 
-            buffer, 
-            MAX_DATAGRAM_SIZE, 
-            0,
-            (sockaddr*)&src_addr, 
-            &addr_len
-        );
-        
-        if (recv_len < 0) {
-            perror("recvfrom failed");
-            continue;
+        char recv_buf[1024];
+        memset(recv_buf, 0, sizeof(recv_buf));
+        ssize_t r = read(sock_fd, recv_buf, sizeof(recv_buf)-1);
+        if (r < 0) {
+            perror("read() from daemon");
+            break;
+        } else if (r == 0) {
+            printf("server: Daemon closed connection.\n");
+            break;
         }
-
-        print_payload(buffer, src_addr);
+        printf("server(port=%d): Received: %.*s\n", port, (int)r, recv_buf);
     }
-}
 
-int main() {
-    int sockfd = create_ip_socket();
-    sockaddr_in src_addr;
-    socklen_t addr_len = sizeof(src_addr);
-
-    read_loop(sockfd, src_addr, addr_len);
-
-    close(sockfd);
+    close(sock_fd);
     return 0;
 }
