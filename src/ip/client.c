@@ -20,12 +20,12 @@ struct ip* prepare_ip_header(
 
     if (inet_pton(AF_INET, "0.0.0.0", &(ip_header->ip_src)) != 1) {
         perror("inet_pton failed for 0.0.0.0");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     
     if (inet_pton(AF_INET, dest_ip, &(ip_header->ip_dst)) != 1) {
         perror("inet_pton failed for destination address");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     
     return ip_header;
@@ -50,7 +50,7 @@ struct sockaddr_in prepare_dest_addr(const char* dest_ip) {
     
     if (inet_pton(AF_INET, dest_ip, &(dest_addr.sin_addr)) != 1) {
         perror("inet_pton failed for destination address");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
     
     return dest_addr;
@@ -76,7 +76,7 @@ void send_message(
         ) < 0
     ) {
         perror("sendto failed");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     printf("Sent message to %s\n", dest_ip);
@@ -87,7 +87,7 @@ void send_message(
 int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <destination_ip> <message>\n", argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     int sockfd = create_ip_socket();
