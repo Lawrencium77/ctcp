@@ -99,7 +99,7 @@ int send_server_acknowledgement(int port, int server_fd) {
     return 0;
 }
 
-void handle_new_server(int listen_fd) {
+void handle_new_server() {
     struct sockaddr_un addr;
     socklen_t addr_len = sizeof(addr);
     int server_fd = accept(listen_fd, (struct sockaddr*)&addr, &addr_len);
@@ -136,7 +136,7 @@ int validate_udp_checksum(ip* ip_header, udp_datagram* udp_packet) {
     }
 }
 
-void handle_new_data(int raw_fd) {
+void handle_new_data() {
     char buffer[MAX_DATAGRAM_SIZE];
     memset(buffer, 0, sizeof(buffer));
     struct sockaddr_in src_addr;
@@ -266,11 +266,11 @@ int main(void) {
         }
 
         if (FD_ISSET(listen_fd, &readfds)) {
-            handle_new_server(listen_fd);
+            handle_new_server();
         }
 
         if (FD_ISSET(raw_fd, &readfds)) {
-            handle_new_data(raw_fd);
+            handle_new_data();
         }
 
         check_for_closed_connections(readfds);
