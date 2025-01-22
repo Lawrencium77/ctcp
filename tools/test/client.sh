@@ -2,13 +2,15 @@
 set -euo pipefail
 
 MESSAGE="Hello World"
-PROTOCOL="ip"
+PROTOCOL="udp"
+PORT="12345"
 
 function show_help {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
     echo "  -m, --message MESSAGE       Message to send"
-    echo "  -p, --protocol PROTOCOL     Protocol to use (ip/udp/tcp)"
+    echo "  -p, --protocol PROTOCOL     Protocol to use (ip/udp)"
+    echo "  -P, --port PORT             Port to use"
     echo "  -h, --help                  Show this help message"
     exit 0
 }
@@ -21,6 +23,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -p|--protocol)
             PROTOCOL="$2"
+            shift 2
+            ;;
+        -P|--port)
+            PORT="$2"
             shift 2
             ;;
         -h|--help)
@@ -37,6 +43,6 @@ echo "Getting server IP..."
 SERVER_IP=$(docker compose exec client nslookup server | grep "Address" | tail -n1 | awk '{print $2}')
 
 echo "Sending message from client process..."
-docker compose exec client bash -c "cd /app && build/${PROTOCOL}/client ${SERVER_IP} \"${MESSAGE}\""
+docker compose exec client bash -c "cd /app && build/${PROTOCOL}/client ${SERVER_IP} ${PORT} \"${MESSAGE}\""
 
 echo "Test complete."
