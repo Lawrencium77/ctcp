@@ -41,6 +41,23 @@ void send_port_to_daemon(int sock_fd, int port) {
         close(sock_fd);
         exit(EXIT_FAILURE);
     }
+}
+
+void receive_ack_from_daemon(int sock_fd, int port) {
+    int reply;
+    ssize_t daemon_response = read(sock_fd, &reply, sizeof(reply)); // Blocking
+    if (daemon_response <= 0) {
+        fprintf(stderr, "Daemon closed connection or read error.\n");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
+
+    if (reply != 0) {
+        fprintf(stderr, "Port %d is already in use\n", port);
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
+
     printf("server: Bound to port=%d (user-level). Waiting for data...\n", port);
 }
 
@@ -66,6 +83,7 @@ int main(int argc, char *argv[])
     int sock_fd = create_unix_domain_socket();
     connect_to_daemon(sock_fd);
     send_port_to_daemon(sock_fd, port);
+    receive_ack_from_daemon(sock_fd, port);
 
     while (1) {
         char recv_buf[MAX_DATAGRAM_SIZE];

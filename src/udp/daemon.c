@@ -76,7 +76,18 @@ int find_server_fd_for_port(int port) {
             return port_map[i].fd;
         }
     }
-    return -1;
+    return 0;
+}
+
+int send_server_acknowledgement(int port, int server_fd) {
+    int already_used_fd = find_server_fd_for_port(port);
+    write(server_fd, &already_used_fd, sizeof(already_used_fd));
+    if (already_used_fd > 0) {
+            fprintf(stderr, "Port %d already in use\n", port);
+            close(server_fd);
+            return -1;
+    }
+    return 0;
 }
 
 void handle_new_server(int listen_fd) {
@@ -98,8 +109,11 @@ void handle_new_server(int listen_fd) {
     }
 
     int port = atoi(buf);
-    printf("Received new server at port %d\n", port);
-    add_port_mapping(port, server_fd);
+    printf("Received server connection request at port %d\n", port);
+    if (send_server_acknowledgement(port, server_fd) == 0) {
+        printf("New server connected on port %d\n", port);
+        add_port_mapping(port, server_fd);
+    }
 }
 
 int validate_udp_checksum(ip* ip_header, udp_datagram* udp_packet) {
@@ -142,7 +156,7 @@ void handle_new_data(int raw_fd) {
 
     int dest_port = udp_packet->header.dest_port;
     int server_fd = find_server_fd_for_port(dest_port);
-    if (server_fd < 0) {
+    if (server_fd == 0) {
         printf("No server found for port %d, dropping packet\n", dest_port);
         return;
     }
