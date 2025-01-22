@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
     
     int port = atoi(argv[1]);
     int sock_fd = create_unix_domain_socket();
+    
+    // The server and daemon processes interact with a double-handshake during startup
     connect_to_daemon(sock_fd);
     send_port_to_daemon(sock_fd, port);
     receive_ack_from_daemon(sock_fd, port);

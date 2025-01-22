@@ -1,5 +1,12 @@
 # ctcp
 
+A C implementation of UDP and TCP protocols over IP.
+
+### Current Status
+
+* **UDP**: Single-threaded server and client implementation are working (see setup below).
+* **TCP**: Not yet implemented.
+
 ## How To Use This Code
 
 ### Development
@@ -20,10 +27,21 @@ tools/test/set_conditions.sh
 to set packet loss and corrupt  ion rates. Next, run
 
 ```bash
+tools/test/daemon.sh
+```
+
+to launch the UDP daemon process. This handles the raw IP socket and implements UDP's two main services:
+
+* Checksum validation
+* Demultiplexing.
+
+In a separate terminal, then run a UDP server process:
+
+```bash
 tools/test/server.sh
 ```
 
-to launch the server process. In a separate terminal, then run the client process:
+Then run a UDP client process to send data to the UDP server:
 
 ```bash
 tools/test/client.sh
