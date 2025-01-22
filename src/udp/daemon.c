@@ -1,14 +1,16 @@
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "checksum.h"
 #include "types.h"
@@ -19,19 +21,26 @@
 
 static port_map_entry port_map[MAX_SERVERS];
 static int server_count = 0;
+static int raw_fd;
+static int listen_fd;
 
-int create_unix_listen_socket(const char *path) {
+int create_unix_listen_socket() {
+    struct stat st;
+    if (stat(DAEMON_SOCK_PATH, &st) == 0) {
+        fprintf(stderr, "Socket file %s already exists\n", DAEMON_SOCK_PATH);
+        exit(EXIT_FAILURE);
+    }
+
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd < 0) {
         perror("Creation of Unix domain socket failed");
         exit(EXIT_FAILURE);
     }
-    unlink(path);
 
     struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
+    strncpy(addr.sun_path, DAEMON_SOCK_PATH, sizeof(addr.sun_path) - 1);
 
     if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
         perror("Binding Unix domain socket failed");
@@ -172,13 +181,14 @@ void handle_new_data(int raw_fd) {
     }
 }
 
-void cleanup(int raw_fd, int listen_fd) {
+void cleanup() {
     close(raw_fd);
     close(listen_fd);
     for (int i = 0; i < server_count; i++) {
         close(port_map[i].fd);
     }
     unlink(DAEMON_SOCK_PATH);
+    exit(EXIT_SUCCESS);
 }
 
 void check_for_closed_connections(fd_set readfds) {
@@ -205,9 +215,19 @@ void check_for_closed_connections(fd_set readfds) {
     }
 }
 
+void register_signal_handler() {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = cleanup;
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGABRT, &sa, NULL);
+}
+
 int main(void) {
-    int raw_fd = create_ip_socket();
-    int listen_fd = create_unix_listen_socket(DAEMON_SOCK_PATH);
+    register_signal_handler();
+    raw_fd = create_ip_socket();
+    listen_fd = create_unix_listen_socket();
     printf("Listening on Unix socket path=%s\n", DAEMON_SOCK_PATH);
 
     int max_fd = (raw_fd > listen_fd ? raw_fd : listen_fd);
@@ -255,8 +275,6 @@ int main(void) {
 
         check_for_closed_connections(readfds);
     }
-
-    cleanup(raw_fd, listen_fd);
 
     return 0;
 }
