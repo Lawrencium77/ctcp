@@ -100,6 +100,61 @@ int validate_udp_checksum(ip* ip_header, udp_datagram* udp_packet) {
     }
 }
 
+void handle_new_data(int raw_fd) {
+    char buffer[MAX_DATAGRAM_SIZE];
+    struct sockaddr_in src_addr;
+    socklen_t src_len = sizeof(src_addr);
+    ssize_t recv_len = recvfrom(raw_fd, buffer, sizeof(buffer), 0,
+                                (struct sockaddr*)&src_addr, &src_len);
+    if (recv_len <= 0) {
+        if (recv_len < 0) {
+            perror("Failed raw_fd recvfrom");
+        }
+        return;
+    }
+
+    ip* ip_header = (ip*)buffer;
+    int ip_header_len = ip_header->ip_hl * 4;
+    if (recv_len < ip_header_len + (ssize_t)sizeof(udp_header)) {
+        fprintf(stderr, "Recevied IP Datagram too small\n");
+        return;
+    }
+
+    udp_datagram* udp_packet = (udp_datagram*)(buffer + ip_header_len);
+    if (validate_udp_checksum(ip_header, udp_packet) != 0) {
+        printf("Invalid UDP checksum, dropping packet\n");
+        return;
+    }
+
+    int dest_port = udp_packet->header.dest_port;
+    int server_fd = find_server_fd_for_port(dest_port);
+    if (server_fd < 0) {
+        printf("No server found for port %d, dropping packet\n", dest_port);
+        return;
+    }
+
+    size_t udp_header_len = sizeof(udp_header);
+    size_t payload_len = udp_packet->header.length - udp_header_len;
+    if (payload_len > 0) {
+        printf("Writing to server\n");
+        ssize_t sent = write(server_fd, udp_packet->payload, payload_len);
+        if (sent < 0) {
+            perror("daemon: write() to server failed");
+        }
+    }
+}
+
+void cleanup(int raw_fd, int listen_fd) {
+    close(raw_fd);
+    close(listen_fd);
+
+    for (int i = 0; i < server_count; i++) {
+        close(port_map[i].fd);
+    }
+
+    unlink(DAEMON_SOCK_PATH);
+}
+
 int main(void) {
     int raw_fd = create_ip_socket();
     int listen_fd = create_unix_listen_socket(DAEMON_SOCK_PATH);
@@ -108,9 +163,10 @@ int main(void) {
     int max_fd = (raw_fd > listen_fd ? raw_fd : listen_fd);
 
     while (1) {
+        // Create set of file descriptors to monitor. 
+        // One for IP socket, and one for listening Unix domain socket.
         fd_set readfds;
         FD_ZERO(&readfds);
-
         FD_SET(raw_fd, &readfds);
         FD_SET(listen_fd, &readfds);
 
@@ -121,6 +177,7 @@ int main(void) {
             }
         }
 
+        // Blocks until there's activity on one of the file descriptors.
         int activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
         if (activity < 0) {
             if (errno == EINTR) {
@@ -135,60 +192,11 @@ int main(void) {
         }
 
         if (FD_ISSET(raw_fd, &readfds)) {
-            char buffer[MAX_DATAGRAM_SIZE];
-            struct sockaddr_in src_addr;
-            socklen_t src_len = sizeof(src_addr);
-            ssize_t recv_len = recvfrom(raw_fd, buffer, sizeof(buffer), 0,
-                                        (struct sockaddr*)&src_addr, &src_len);
-            if (recv_len <= 0) {
-                if (recv_len < 0) {
-                    perror("recvfrom raw_fd");
-                }
-                continue;
-            }
-            ip* ip_header = (ip*)buffer;
-            int ip_header_len = ip_header->ip_hl * 4;
-
-            if (recv_len < ip_header_len + (ssize_t)sizeof(udp_header)) {
-                fprintf(stderr, "daemon: Packet too small\n");
-                continue;
-            }
-
-            udp_datagram* udp_packet = (udp_datagram*)(buffer + ip_header_len);
-
-            if (validate_udp_checksum(ip_header, udp_packet) != 0) {
-                printf("daemon: Invalid UDP checksum, dropping packet\n");
-                continue;
-            }
-
-            int dest_port = udp_packet->header.dest_port;
-
-            int server_fd = find_server_fd_for_port(dest_port);
-            if (server_fd < 0) {
-                printf("daemon: No server found for port %d. Dropping.\n", dest_port);
-                continue;
-            }
-
-            size_t udp_header_len = sizeof(udp_header);
-            size_t payload_len = udp_packet->header.length - udp_header_len;
-            if (payload_len > 0) {
-                printf("Daemon is writing to server\n");
-                ssize_t sent = write(server_fd, udp_packet->payload, payload_len);
-                if (sent < 0) {
-                    perror("daemon: write() to server failed");
-                }
-            }
+            handle_new_data(raw_fd);
         }
     }
 
-    close(raw_fd);
-    close(listen_fd);
-
-    for (int i = 0; i < server_count; i++) {
-        close(port_map[i].fd);
-    }
-
-    unlink(DAEMON_SOCK_PATH);
+    cleanup(raw_fd, listen_fd);
 
     return 0;
 }
