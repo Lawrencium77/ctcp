@@ -147,11 +147,9 @@ void handle_new_data(int raw_fd) {
 void cleanup(int raw_fd, int listen_fd) {
     close(raw_fd);
     close(listen_fd);
-
     for (int i = 0; i < server_count; i++) {
         close(port_map[i].fd);
     }
-
     unlink(DAEMON_SOCK_PATH);
 }
 
