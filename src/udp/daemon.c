@@ -53,9 +53,22 @@ void add_port_mapping(int port, int server_fd) {
         port_map[server_count].fd = server_fd;
         server_count++;
     } else {
-        fprintf(stderr, "No more space to store port mappings!\n");
+        fprintf(stderr, "Max server count has been reached.\n");
     }
 }
+
+void remove_port_mapping(int index) {
+    if (index < 0 || index >= server_count) {
+        fprintf(stderr, "Invalid index %d for port mapping removal\n", index);
+        return;
+    }
+    
+    close(port_map[index].fd);
+    memmove(&port_map[index], &port_map[index + 1], 
+            (server_count - index - 1) * sizeof(port_map_entry));
+    server_count--;
+}
+
 
 int find_server_fd_for_port(int port) {
     for (int i = 0; i < server_count; i++) {
@@ -140,7 +153,7 @@ void handle_new_data(int raw_fd) {
         printf("Writing to server\n");
         ssize_t sent = write(server_fd, udp_packet->payload, payload_len);
         if (sent < 0) {
-            perror("daemon: write() to server failed");
+            perror("write() to server failed");
         }
     }
 }
@@ -154,20 +167,52 @@ void cleanup(int raw_fd, int listen_fd) {
     unlink(DAEMON_SOCK_PATH);
 }
 
+void check_for_closed_connections(fd_set readfds) {
+    for (int i = 0; i < server_count;) {
+        int sfd = port_map[i].fd;
+        if (FD_ISSET(sfd, &readfds)) {
+            char tmpbuf[1];
+            
+            ssize_t n = recv(sfd, tmpbuf, sizeof(tmpbuf), MSG_PEEK);
+            if (n == 0) {
+                printf("Server on port %d has closed. Removing from table.\n",
+                    port_map[i].port);
+                remove_port_mapping(i);
+                continue;
+            } 
+            else if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                perror("Read error on server socket");
+                printf("Removing server on port %d due to error.\n", port_map[i].port);
+                remove_port_mapping(i);
+                continue;
+            }
+        }
+        i++;
+    }
+}
+
 int main(void) {
     int raw_fd = create_ip_socket();
     int listen_fd = create_unix_listen_socket(DAEMON_SOCK_PATH);
-    printf("daemon: Listening on Unix socket path=%s\n", DAEMON_SOCK_PATH);
+    printf("Listening on Unix socket path=%s\n", DAEMON_SOCK_PATH);
 
     int max_fd = (raw_fd > listen_fd ? raw_fd : listen_fd);
 
     while (1) {
         // Create set of file descriptors to monitor. 
-        // One for IP socket, and one for listening Unix domain socket.
+        // One for IP socket, one for listening Unix domain socket,
+        // and one for each server.
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(raw_fd, &readfds);
         FD_SET(listen_fd, &readfds);
+        for (int i = 0; i < server_count; i++) {
+            int sfd = port_map[i].fd;
+            FD_SET(sfd, &readfds);
+            if (sfd > max_fd) {
+                max_fd = sfd;
+            }
+        }
 
         for (int i = 0; i < server_count; i++) {
             int sfd = port_map[i].fd;
@@ -193,6 +238,8 @@ int main(void) {
         if (FD_ISSET(raw_fd, &readfds)) {
             handle_new_data(raw_fd);
         }
+
+        check_for_closed_connections(readfds);
     }
 
     cleanup(raw_fd, listen_fd);
