@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define DAEMON_SOCK_PATH "/tmp/daemon_sock"
+#include "server_common.h"
 
 int main(int argc, char *argv[])
 {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    char buf[16];
+    char buf[MAX_UDP_PORT_LENGTH];
     snprintf(buf, sizeof(buf), "%d", port);
     ssize_t n = write(sock_fd, buf, strlen(buf));
     if (n < 0) {

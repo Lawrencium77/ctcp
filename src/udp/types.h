@@ -20,4 +20,9 @@ typedef struct{
     char payload[];
 } udp_datagram;
 
+typedef struct {
+    int port;
+    int fd;
+} port_map_entry;
+
 #endif

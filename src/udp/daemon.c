@@ -12,23 +12,18 @@
 
 #include "checksum.h"
 #include "types.h"
+#include "server_common.h"
 #include "utils.h"
 
-#define DAEMON_SOCK_PATH "/tmp/daemon_sock"
 #define MAX_SERVERS 10
-
-typedef struct {
-    int port;
-    int fd;
-} port_map_entry;
 
 static port_map_entry port_map[MAX_SERVERS];
 static int server_count = 0;
 
-static int create_unix_listen_socket(const char *path) {
+int create_unix_listen_socket(const char *path) {
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
     if (fd < 0) {
-        perror("socket(AF_UNIX) failed");
+        perror("Creation of Unix domain socket failed");
         exit(EXIT_FAILURE);
     }
     unlink(path);
@@ -39,36 +34,30 @@ static int create_unix_listen_socket(const char *path) {
     strncpy(addr.sun_path, path, sizeof(addr.sun_path) - 1);
 
     if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-        perror("bind(AF_UNIX) failed");
+        perror("Binding Unix domain socket failed");
         close(fd);
         exit(EXIT_FAILURE);
     }
 
     if (listen(fd, 5) < 0) {
-        perror("listen(AF_UNIX) failed");
+        perror("Listening to Unix domain socket failed");
         close(fd);
         exit(EXIT_FAILURE);
     }
     return fd;
 }
 
-static void add_port_mapping(int port, int server_fd) {
-    for (int i = 0; i < server_count; i++) {
-        if (port_map[i].port == port) {
-            port_map[i].fd = server_fd;
-            return;
-        }
-    }
+void add_port_mapping(int port, int server_fd) {
     if (server_count < MAX_SERVERS) {
         port_map[server_count].port = port;
-        port_map[server_count].fd   = server_fd;
+        port_map[server_count].fd = server_fd;
         server_count++;
     } else {
         fprintf(stderr, "No more space to store port mappings!\n");
     }
 }
 
-static int find_server_fd_for_port(int port) {
+int find_server_fd_for_port(int port) {
     for (int i = 0; i < server_count; i++) {
         if (port_map[i].port == port) {
             return port_map[i].fd;
@@ -77,7 +66,7 @@ static int find_server_fd_for_port(int port) {
     return -1;
 }
 
-static void handle_new_server(int listen_fd) {
+void handle_new_server(int listen_fd) {
     struct sockaddr_un addr;
     socklen_t addr_len = sizeof(addr);
     int server_fd = accept(listen_fd, (struct sockaddr*)&addr, &addr_len);
@@ -86,7 +75,7 @@ static void handle_new_server(int listen_fd) {
         return;
     }
 
-    char buf[16];
+    char buf[MAX_UDP_PORT_LENGTH];
     memset(buf, 0, sizeof(buf));
     ssize_t n = read(server_fd, buf, sizeof(buf)-1);
     if (n <= 0) {
@@ -96,10 +85,8 @@ static void handle_new_server(int listen_fd) {
     }
 
     int port = atoi(buf);
-    printf("daemon: Received new server wants port=%d\n", port);
-
+    printf("Received new server at port %d\n", port);
     add_port_mapping(port, server_fd);
-
 }
 
 int validate_udp_checksum(ip* ip_header, udp_datagram* udp_packet) {
@@ -114,7 +101,7 @@ int validate_udp_checksum(ip* ip_header, udp_datagram* udp_packet) {
 }
 
 int main(void) {
-    int raw_fd = create_ip_socket();  // from utils.h
+    int raw_fd = create_ip_socket();
     int listen_fd = create_unix_listen_socket(DAEMON_SOCK_PATH);
     printf("daemon: Listening on Unix socket path=%s\n", DAEMON_SOCK_PATH);
 
