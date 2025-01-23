@@ -1,6 +1,7 @@
 #include "checksum.h"
 #include <stdio.h>
 #include <inttypes.h>
+#include <string.h>
 
 // See https://en.wikipedia.org/wiki/User_Datagram_Protocol#Checksum_computation
 uint16_t calculate_udp_checksum(
@@ -9,7 +10,7 @@ uint16_t calculate_udp_checksum(
 ) {
     uint32_t checksum = 0;
     uint16_t* ptr;
-    int length = udp_packet->header.length;
+    int udp_length = udp_packet->header.length;
 
     udp_packet->header.checksum = 0;
     
@@ -18,16 +19,23 @@ uint16_t calculate_udp_checksum(
     pseudo_header.dest_ip = ip_header->ip_dst.s_addr;
     pseudo_header.zero = 0;
     pseudo_header.protocol = IPPROTO_RAW;
-    pseudo_header.udp_length = udp_packet->header.length;
+    pseudo_header.udp_length = udp_length;
 
     ptr = (uint16_t*)&pseudo_header;
     for (int i = 0; i < sizeof(pseudo_header)/2; i++) {
         checksum += ntohs(ptr[i]);
     }
     
+    // Account for final byte if UDP packet has odd size
+    // by padding payload with one byte of zeros
+    if (udp_length % 2 == 1) {
+        memset((uint8_t*)udp_packet + udp_length, 0, 1);
+    }
+
+    // UDP packet checksum
     ptr = (uint16_t*)udp_packet;
-    int udp_length = (length + 1) / 2; // Round up to handle odd bytes
-    for (int i = 0; i < udp_length; i++) {
+    int half_udp_length = (udp_length + 1) / 2; // Round up to handle odd bytes
+    for (int i = 0; i < half_udp_length; i++) {
         checksum += ntohs(ptr[i]);
     }
     

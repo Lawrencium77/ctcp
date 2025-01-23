@@ -138,7 +138,6 @@ int validate_udp_checksum(ip* ip_header, udp_datagram* udp_packet) {
 
 void handle_new_data() {
     char buffer[MAX_DATAGRAM_SIZE];
-    memset(buffer, 0, sizeof(buffer));
     struct sockaddr_in src_addr;
     socklen_t src_len = sizeof(src_addr);
     ssize_t recv_len = recvfrom(raw_fd, buffer, sizeof(buffer), 0,
