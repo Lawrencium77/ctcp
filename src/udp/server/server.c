@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "server_common.h"
+#include "types.h"
 #include "utils.h"
 
 int create_unix_domain_socket() {
@@ -71,7 +72,9 @@ void handle_new_data(int port, char *recv_buf, ssize_t r) {
     printf("server: Daemon closed connection.\n");
     return;
   }
-  printf("server(port=%d): Received: %.*s\n", port, (int)r, recv_buf);
+  daemon_to_server_packet *received_data = (daemon_to_server_packet *)recv_buf;
+  printf("server(port=%d): Received from client(port=%d): %.*s\n", port,
+         received_data->port, (int)r, received_data->payload);
 }
 
 int main(int argc, char *argv[]) {
