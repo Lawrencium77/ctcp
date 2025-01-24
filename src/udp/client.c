@@ -5,7 +5,7 @@
 
 udp_datagram *prepare_udp_packet(const char *message, const char *dest_port) {
   static char packet[MAX_DATAGRAM_SIZE];
-  memset(packet, 0, MAX_DATAGRAM_SIZE);
+  explicit_bzero(packet, MAX_DATAGRAM_SIZE);
 
   udp_datagram *udp_packet = (udp_datagram *)packet;
   udp_packet->header.src_port = 0;
@@ -63,7 +63,7 @@ void set_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
 
 ip *prepare_ip_packet(const char *dest_ip, udp_datagram *udp_packet) {
   static char datagram[MAX_DATAGRAM_SIZE];
-  memset(datagram, 0, MAX_DATAGRAM_SIZE);
+  explicit_bzero(datagram, MAX_DATAGRAM_SIZE);
 
   ip *ip_header = prepare_ip_header(datagram, dest_ip, udp_packet);
   set_udp_checksum(ip_header, udp_packet);
@@ -75,7 +75,7 @@ ip *prepare_ip_packet(const char *dest_ip, udp_datagram *udp_packet) {
 
 sockaddr_in prepare_dest_addr(const char *dest_ip) {
   sockaddr_in dest_addr;
-  memset(&dest_addr, 0, sizeof(dest_addr));
+  explicit_bzero(&dest_addr, sizeof(dest_addr));
   dest_addr.sin_family = AF_INET;
 
   if (inet_pton(AF_INET, dest_ip, &(dest_addr.sin_addr)) != 1) {

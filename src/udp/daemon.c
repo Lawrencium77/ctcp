@@ -38,7 +38,7 @@ int create_unix_listen_socket() {
   }
 
   struct sockaddr_un addr;
-  memset(&addr, 0, sizeof(addr));
+  explicit_bzero(&addr, sizeof(addr));
   addr.sun_family = AF_UNIX;
   strncpy(addr.sun_path, DAEMON_SOCK_PATH, sizeof(addr.sun_path) - 1);
 
@@ -108,7 +108,7 @@ void handle_new_server() {
   }
 
   char buf[MAX_UDP_PORT_LENGTH];
-  memset(buf, 0, sizeof(buf));
+  explicit_bzero(buf, sizeof(buf));
   ssize_t n = read(server_fd, buf, sizeof(buf) - 1);
   if (n <= 0) {
     perror("read() from server failed");
@@ -214,7 +214,7 @@ void check_for_closed_connections(fd_set readfds) {
 
 void register_signal_handler() {
   struct sigaction sa;
-  memset(&sa, 0, sizeof(sa));
+  explicit_bzero(&sa, sizeof(sa));
   sa.sa_handler = cleanup;
   sigaction(SIGINT, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);

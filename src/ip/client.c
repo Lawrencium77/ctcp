@@ -30,7 +30,7 @@ struct ip *prepare_ip_header(char *datagram, const char *dest_ip,
 
 struct ip *prepare_ip_packet(const char *dest_ip, const char *message) {
   static char datagram[MAX_DATAGRAM_SIZE];
-  memset(datagram, 0, MAX_DATAGRAM_SIZE);
+  explicit_bzero(datagram, MAX_DATAGRAM_SIZE);
 
   struct ip *ip_header = prepare_ip_header(datagram, dest_ip, message);
   strcpy(datagram + sizeof(struct ip), message); // Add payload
@@ -39,7 +39,7 @@ struct ip *prepare_ip_packet(const char *dest_ip, const char *message) {
 
 struct sockaddr_in prepare_dest_addr(const char *dest_ip) {
   struct sockaddr_in dest_addr;
-  memset(&dest_addr, 0, sizeof(dest_addr));
+  explicit_bzero(&dest_addr, sizeof(dest_addr));
   dest_addr.sin_family = AF_INET;
 
   if (inet_pton(AF_INET, dest_ip, &(dest_addr.sin_addr)) != 1) {

@@ -26,7 +26,7 @@ uint16_t calculate_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
   // Account for final byte if UDP packet has odd size
   // by padding payload with one byte of zeros
   if (udp_length % 2 == 1) {
-    memset((uint8_t *)udp_packet + udp_length, 0, 1);
+    explicit_bzero((uint8_t *)udp_packet + udp_length, 1);
   }
 
   // UDP packet checksum

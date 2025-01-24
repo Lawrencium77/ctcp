@@ -21,7 +21,7 @@ int create_unix_domain_socket() {
 
 void connect_to_daemon(int sock_fd) {
   struct sockaddr_un daemon_addr;
-  memset(&daemon_addr, 0, sizeof(daemon_addr));
+  explicit_bzero(&daemon_addr, sizeof(daemon_addr));
   daemon_addr.sun_family = AF_UNIX;
   strncpy(daemon_addr.sun_path, DAEMON_SOCK_PATH,
           sizeof(daemon_addr.sun_path) - 1);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 
   while (1) {
     char recv_buf[MAX_DATAGRAM_SIZE];
-    memset(recv_buf, 0, sizeof(recv_buf));
+    explicit_bzero(recv_buf, sizeof(recv_buf));
     ssize_t r = read(sock_fd, recv_buf, sizeof(recv_buf) - 1); // Blocking
     handle_new_data(port, recv_buf, r);
     if (r <= 0) {
