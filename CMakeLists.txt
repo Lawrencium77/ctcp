@@ -12,6 +12,8 @@ if(DEBUG)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -DDEBUG")
 endif()
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/ip
