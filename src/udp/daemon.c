@@ -170,9 +170,14 @@ void handle_new_data() {
 
   size_t udp_header_len = sizeof(udp_header);
   size_t payload_len = udp_packet->header.length - udp_header_len;
+
+  daemon_to_server_packet packet;
+  packet.port = udp_packet->header.src_port;
+  memcpy(packet.payload, udp_packet->payload, payload_len);
+
   if (payload_len > 0) {
     printf("Writing to server\n");
-    ssize_t sent = write(server_fd, udp_packet->payload, payload_len);
+    ssize_t sent = write(server_fd, &packet, sizeof(int) + payload_len);
     if (sent < 0) {
       perror("write() to server failed");
     }

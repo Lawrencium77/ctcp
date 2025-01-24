@@ -3,12 +3,16 @@
 #include "utils.h"
 #include <string.h>
 
-udp_datagram *prepare_udp_packet(const char *message, const char *dest_port) {
+// TODO: Complete this
+int get_ephemeral_port() { return 0; }
+
+udp_datagram *prepare_udp_packet(const char *message, const char *dest_port,
+                                 int src_port) {
   static char packet[MAX_DATAGRAM_SIZE];
   explicit_bzero(packet, MAX_DATAGRAM_SIZE);
 
   udp_datagram *udp_packet = (udp_datagram *)packet;
-  udp_packet->header.src_port = 0;
+  udp_packet->header.src_port = src_port;
   udp_packet->header.dest_port = atoi(dest_port);
   udp_packet->header.length = sizeof(udp_header) + strlen(message);
   udp_packet->header.checksum = 0;
@@ -88,8 +92,8 @@ sockaddr_in prepare_dest_addr(const char *dest_ip) {
 }
 
 void send_message(int sockfd, const char *dest_ip, const char *dest_port,
-                  const char *message) {
-  udp_datagram *udp_packet = prepare_udp_packet(message, dest_port);
+                  const char *message, int src_port) {
+  udp_datagram *udp_packet = prepare_udp_packet(message, dest_port, src_port);
   ip *ip_header = prepare_ip_packet(dest_ip, udp_packet);
   char *datagram = (char *)ip_header;
 
@@ -105,14 +109,18 @@ void send_message(int sockfd, const char *dest_ip, const char *dest_port,
 }
 
 int main(int argc, char *argv[]) {
-  if (argc != 4) {
-    fprintf(stderr, "Usage: %s <destination_ip> <dest_port> <message>\n",
+  if (argc != 4 && argc != 5) {
+    fprintf(stderr,
+            "Usage: %s <destination_ip> <dest_port> <message> [optional "
+            "<src_port>] \n",
             argv[0]);
     exit(EXIT_FAILURE);
   }
 
   int sockfd = create_ip_socket();
-  send_message(sockfd, argv[1], argv[2], argv[3]);
+  int src_port = (argc == 4) ? get_ephemeral_port() : atoi(argv[4]);
+  printf("Running client with ephemeral port %d\n", src_port);
+  send_message(sockfd, argv[1], argv[2], argv[3], src_port);
   close(sockfd);
   return 0;
 }

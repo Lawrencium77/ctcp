@@ -25,4 +25,12 @@ typedef struct {
   int fd;
 } port_map_entry;
 
+// The daemon handles most of the packet handling complexity and passes
+// the source port and received message to the server. In the future it
+// might make more sense to pass the entire UDP packet to the server.
+typedef struct {
+  int port;
+  char payload[];
+} daemon_to_server_packet;
+
 #endif
