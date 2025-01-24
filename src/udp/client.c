@@ -28,10 +28,18 @@ ip* prepare_ip_header(
     ip *ip_header = (ip *)datagram;
     uint16_t udp_packet_length = udp_packet->header.length;
 
+    // Since we construct our own IP headers, the kernel will not do fragmentation/reassembly of IP datagrams.
+    // We there must make sure we don't exceed the link-layer MTU.
+    unsigned short ip_len = sizeof(ip) + udp_packet_length;
+    if (ip_len > ETH_MTU) {
+        fprintf(stderr, "Attempting to send packet larger than MTU. Packet length: %d, MTU: %d\n", ip_len, ETH_MTU);
+        exit(EXIT_FAILURE);
+    }
+
     ip_header->ip_hl = 5;
     ip_header->ip_v = 4;
     ip_header->ip_tos = 0;
-    ip_header->ip_len = htons(sizeof(ip) + udp_packet_length);
+    ip_header->ip_len = htons(ip_len);
     ip_header->ip_id = htons(54321);
     ip_header->ip_off = htons(0);
     ip_header->ip_ttl = 64;
