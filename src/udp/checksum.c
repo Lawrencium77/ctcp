@@ -1,6 +1,5 @@
 #include "checksum.h"
 #include <inttypes.h>
-#include <stdio.h>
 #include <string.h>
 
 // See https://en.wikipedia.org/wiki/User_Datagram_Protocol#Checksum_computation
