@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 
 #define MAX_DATAGRAM_SIZE 4096
+#define ETH_MTU 1500 // Ethernet MTU is 1500 bytes
 
 int create_ip_socket() {
     int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
