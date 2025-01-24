@@ -1,10 +1,8 @@
 #include "checksum.h"
+#include "client_ports.h"
 #include "types.h"
 #include "utils.h"
 #include <string.h>
-
-// TODO: Complete this
-int get_ephemeral_port() { return 0; }
 
 udp_datagram *prepare_udp_packet(const char *message, const char *dest_port,
                                  int src_port) {
@@ -121,6 +119,7 @@ int main(int argc, char *argv[]) {
   int src_port = (argc == 4) ? get_ephemeral_port() : atoi(argv[4]);
   printf("Running client with ephemeral port %d\n", src_port);
   send_message(sockfd, argv[1], argv[2], argv[3], src_port);
+  release_ephemeral_port(src_port);
   close(sockfd);
   return 0;
 }

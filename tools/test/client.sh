@@ -49,6 +49,6 @@ echo "Getting server IP..."
 SERVER_IP=$(docker compose exec client nslookup server | grep "Address" | tail -n1 | awk '{print $2}')
 
 echo "Sending message from client process..."
-docker compose exec client bash -c "cd /app && build/${PROTOCOL}/client ${SERVER_IP} ${DEST_PORT} \"${MESSAGE}\" ${SRC_PORT}"
+docker compose exec client bash -c "cd /app && build/${PROTOCOL}/client ${SERVER_IP} ${DEST_PORT} \"${MESSAGE}\""
 
 echo "Test complete."

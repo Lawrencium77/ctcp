@@ -24,7 +24,7 @@ add_executable(ip_server src/ip/server.c)
 add_executable(ip_client src/ip/client.c)
 add_executable(udp_daemon src/udp/daemon.c src/udp/checksum.c)
 add_executable(udp_server src/udp/server.c src/udp/checksum.c)
-add_executable(udp_client src/udp/client.c src/udp/checksum.c)
+add_executable(udp_client src/udp/client.c src/udp/checksum.c src/udp/client_ports.c)
 
 set_target_properties(ip_server PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/ip"
