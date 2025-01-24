@@ -29,4 +29,4 @@ done
 
 # Rebuild project code on server container.
 # This updates binary files in client container too, via volume mount.
-docker compose exec server bash -c "cd /app && make clean && make ${DEBUG}"
+docker compose exec server bash -c "cd /app && make clean && mkdir build && cd ./build/ && cmake .. && bear -- make && mv compile_commands.json .."
