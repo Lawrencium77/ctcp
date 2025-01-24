@@ -28,7 +28,6 @@ uint16_t calculate_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
     explicit_bzero((uint8_t *)udp_packet + udp_length, 1);
   }
 
-  // UDP packet checksum
   ptr = (uint16_t *)udp_packet;
   int half_udp_length = (udp_length + 1) / 2; // Round up to handle odd bytes
   for (int i = 0; i < half_udp_length; i++) {
