@@ -13,7 +13,8 @@ udp_datagram *prepare_udp_packet(const char *message, const char *dest_port) {
   udp_packet->header.length = sizeof(udp_header) + strlen(message);
   udp_packet->header.checksum = 0;
 
-  strcpy(udp_packet->payload, message);
+  size_t payload_size = MAX_DATAGRAM_SIZE - sizeof(udp_header);
+  snprintf(udp_packet->payload, payload_size, "%s", message);
   return udp_packet;
 }
 

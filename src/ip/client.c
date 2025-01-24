@@ -33,7 +33,9 @@ struct ip *prepare_ip_packet(const char *dest_ip, const char *message) {
   explicit_bzero(datagram, MAX_DATAGRAM_SIZE);
 
   struct ip *ip_header = prepare_ip_header(datagram, dest_ip, message);
-  strcpy(datagram + sizeof(struct ip), message); // Add payload
+  size_t remaining_size = MAX_DATAGRAM_SIZE - sizeof(struct ip);
+  snprintf(datagram + sizeof(struct ip), remaining_size, "%s",
+           message); // Add payload
   return ip_header;
 }
 
