@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
   receive_ack_from_daemon(sock_fd, port);
 
   char recv_buf[MAX_DATAGRAM_SIZE];
-  
+
   while (1) {
     explicit_bzero(recv_buf, sizeof(recv_buf));
     ssize_t r = read(sock_fd, recv_buf, sizeof(recv_buf) - 1); // Blocking

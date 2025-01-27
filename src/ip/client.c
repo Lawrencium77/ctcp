@@ -2,14 +2,25 @@
 #include "utils.h"
 #include <string.h>
 
-ip *prepare_ip_header(char *datagram, const char *dest_ip,
-                             const char *message) {
+ip *prepare_ip_header(char *datagram, const char *dest_ip, size_t payload_len) {
   ip *ip_header = (ip *)datagram;
+
+  // Since we construct our own IP headers, the kernel will not do
+  // fragmentation/reassembly of IP datagrams. We there must make sure we don't
+  // exceed the link-layer MTU.
+  unsigned short ip_len = sizeof(ip) + payload_len;
+  if (ip_len > ETH_MTU) {
+    fprintf(stderr,
+            "Attempting to send packet larger than MTU. Packet length: %d, "
+            "MTU: %d\n",
+            ip_len, ETH_MTU);
+    exit(EXIT_FAILURE);
+  }
 
   ip_header->ip_hl = 5;
   ip_header->ip_v = 4;
   ip_header->ip_tos = 0;
-  ip_header->ip_len = htons(sizeof(ip) + strlen(message));
+  ip_header->ip_len = htons(ip_len);
   ip_header->ip_id = htons(54321);
   ip_header->ip_off = htons(0);
   ip_header->ip_ttl = 64;
@@ -29,14 +40,13 @@ ip *prepare_ip_header(char *datagram, const char *dest_ip,
   return ip_header;
 }
 
-ip *prepare_ip_packet(const char *dest_ip, const char *message) {
+ip *prepare_ip_packet(const char *dest_ip, void *payload, size_t payload_len) {
   static char datagram[MAX_DATAGRAM_SIZE];
   explicit_bzero(datagram, MAX_DATAGRAM_SIZE);
 
-  ip *ip_header = prepare_ip_header(datagram, dest_ip, message);
-  size_t remaining_size = MAX_DATAGRAM_SIZE - sizeof(ip);
-  snprintf(datagram + sizeof(ip), remaining_size, "%s",
-           message); // Add payload
+  ip *ip_header = prepare_ip_header(datagram, dest_ip, payload_len);
+  memcpy(datagram + sizeof(ip), payload, payload_len); // Add payload
+
   return ip_header;
 }
 
@@ -54,7 +64,7 @@ sockaddr_in prepare_dest_addr(const char *dest_ip) {
 }
 
 void send_message(int sockfd, const char *dest_ip, const char *message) {
-  ip *ip_header = prepare_ip_packet(dest_ip, message);
+  ip *ip_header = prepare_ip_packet(dest_ip, (void *)message, strlen(message));
   char *datagram = (char *)ip_header;
 
   sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
