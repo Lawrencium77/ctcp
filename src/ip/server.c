@@ -1,5 +1,6 @@
 #include "types.h"
 #include "utils.h"
+#include <string.h>
 
 void print_payload(char *buffer, sockaddr_in src_addr) {
   ip *ip_header = (ip *)buffer;
@@ -26,6 +27,7 @@ void read_loop(int sockfd, sockaddr_in src_addr, socklen_t addr_len) {
     }
 
     print_payload(buffer, src_addr);
+    explicit_bzero(buffer, sizeof(buffer));
   }
 }
 
