@@ -1,14 +1,15 @@
+#include "types.h"
 #include "utils.h"
 #include <string.h>
 
-struct ip *prepare_ip_header(char *datagram, const char *dest_ip,
+ip *prepare_ip_header(char *datagram, const char *dest_ip,
                              const char *message) {
-  struct ip *ip_header = (struct ip *)datagram;
+  ip *ip_header = (ip *)datagram;
 
   ip_header->ip_hl = 5;
   ip_header->ip_v = 4;
   ip_header->ip_tos = 0;
-  ip_header->ip_len = htons(sizeof(struct ip) + strlen(message));
+  ip_header->ip_len = htons(sizeof(ip) + strlen(message));
   ip_header->ip_id = htons(54321);
   ip_header->ip_off = htons(0);
   ip_header->ip_ttl = 64;
@@ -28,19 +29,19 @@ struct ip *prepare_ip_header(char *datagram, const char *dest_ip,
   return ip_header;
 }
 
-struct ip *prepare_ip_packet(const char *dest_ip, const char *message) {
+ip *prepare_ip_packet(const char *dest_ip, const char *message) {
   static char datagram[MAX_DATAGRAM_SIZE];
   explicit_bzero(datagram, MAX_DATAGRAM_SIZE);
 
-  struct ip *ip_header = prepare_ip_header(datagram, dest_ip, message);
-  size_t remaining_size = MAX_DATAGRAM_SIZE - sizeof(struct ip);
-  snprintf(datagram + sizeof(struct ip), remaining_size, "%s",
+  ip *ip_header = prepare_ip_header(datagram, dest_ip, message);
+  size_t remaining_size = MAX_DATAGRAM_SIZE - sizeof(ip);
+  snprintf(datagram + sizeof(ip), remaining_size, "%s",
            message); // Add payload
   return ip_header;
 }
 
-struct sockaddr_in prepare_dest_addr(const char *dest_ip) {
-  struct sockaddr_in dest_addr;
+sockaddr_in prepare_dest_addr(const char *dest_ip) {
+  sockaddr_in dest_addr;
   explicit_bzero(&dest_addr, sizeof(dest_addr));
   dest_addr.sin_family = AF_INET;
 
@@ -53,13 +54,13 @@ struct sockaddr_in prepare_dest_addr(const char *dest_ip) {
 }
 
 void send_message(int sockfd, const char *dest_ip, const char *message) {
-  struct ip *ip_header = prepare_ip_packet(dest_ip, message);
+  ip *ip_header = prepare_ip_packet(dest_ip, message);
   char *datagram = (char *)ip_header;
 
-  struct sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
+  sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
 
   if (sendto(sockfd, datagram, ntohs(ip_header->ip_len), 0,
-             (struct sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
+             (sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {
     perror("sendto failed");
     exit(EXIT_FAILURE);
   }

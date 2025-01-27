@@ -49,6 +49,10 @@ echo "Getting server IP..."
 SERVER_IP=$(docker compose exec client nslookup server | grep "Address" | tail -n1 | awk '{print $2}')
 
 echo "Sending message from client process..."
-docker compose exec client bash -c "cd /app && build/${PROTOCOL}/client ${SERVER_IP} ${DEST_PORT} \"${MESSAGE}\""
+if [ "$PROTOCOL" = "ip" ]; then
+    docker compose exec client bash -c "cd /app && build/ip/client ${SERVER_IP} \"${MESSAGE}\""
+else
+    docker compose exec client bash -c "cd /app && build/udp/client ${SERVER_IP} ${DEST_PORT} \"${MESSAGE}\""
+fi
 
 echo "Test complete."
