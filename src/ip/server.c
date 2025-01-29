@@ -1,5 +1,6 @@
 #include "types.h"
 #include "utils.h"
+#include <stdio.h>
 #include <string.h>
 
 void print_payload(char *buffer, sockaddr_in src_addr) {

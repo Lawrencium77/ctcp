@@ -1,5 +1,7 @@
 #include "client_utils.h"
 #include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void send_message(int sockfd, const char *dest_ip, const char *message) {

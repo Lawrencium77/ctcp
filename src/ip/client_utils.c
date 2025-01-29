@@ -1,5 +1,7 @@
 #include "types.h"
 #include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 ip *prepare_ip_header(char *datagram, const char *dest_ip, size_t payload_len) {

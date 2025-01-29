@@ -3,6 +3,8 @@
 #include "types.h"
 #include "utils.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 udp_datagram *prepare_udp_packet(const char *message, const char *dest_port,
                                  int src_port) {

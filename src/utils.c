@@ -1,4 +1,6 @@
 #include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int create_ip_socket() {
   int sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
