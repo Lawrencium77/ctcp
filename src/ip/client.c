@@ -25,8 +25,11 @@ ip *prepare_ip_header(char *datagram, const char *dest_ip, size_t payload_len) {
   ip_header->ip_off = htons(0);
   ip_header->ip_ttl = 64;
   ip_header->ip_p = IPPROTO_RAW;
-  ip_header->ip_sum = 0; // TODO: Do I need to compute IP checksum? Or is it
-                         // handled by the kernel?
+  
+  // IP Checksum appears to always be filled in by the kernel. So we leave it as 0 
+  // and let the kernel do the rest.
+  // See https://man7.org/linux/man-pages/man7/raw.7.html
+  ip_header->ip_sum = 0; 
 
   if (inet_pton(AF_INET, "0.0.0.0", &(ip_header->ip_src)) != 1) {
     perror("inet_pton failed for 0.0.0.0");
