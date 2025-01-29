@@ -7,9 +7,9 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "ip_socket.h"
 #include "server_common.h"
 #include "types.h"
-#include "utils.h"
 
 int create_unix_domain_socket() {
   int sock_fd = socket(AF_UNIX, SOCK_STREAM, 0);

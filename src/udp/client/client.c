@@ -1,8 +1,8 @@
 #include "checksum.h"
 #include "client_ports.h"
-#include "client_utils.h"
+#include "ip_client_utils.h"
+#include "ip_socket.h"
 #include "types.h"
-#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

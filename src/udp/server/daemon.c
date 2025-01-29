@@ -13,9 +13,9 @@
 #include <unistd.h>
 
 #include "checksum.h"
+#include "ip_socket.h"
 #include "server_common.h"
 #include "types.h"
-#include "utils.h"
 
 #define MAX_SERVERS 10
 
