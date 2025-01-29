@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-udp_datagram *prepare_udp_packet(const char *message, const char *dest_port,
-                                 int src_port) {
+udp_datagram *prepare_udp_packet(const char *message, uint32_t dest_ip,
+                                 const char *dest_port, int src_port) {
   static char packet[MAX_DATAGRAM_SIZE];
   explicit_bzero(packet, MAX_DATAGRAM_SIZE);
 
@@ -16,29 +16,25 @@ udp_datagram *prepare_udp_packet(const char *message, const char *dest_port,
   udp_packet->header.src_port = src_port;
   udp_packet->header.dest_port = atoi(dest_port);
   udp_packet->header.length = sizeof(udp_header) + strlen(message);
-  udp_packet->header.checksum = 0;
 
   size_t payload_size = MAX_DATAGRAM_SIZE - sizeof(udp_header);
   snprintf(udp_packet->payload, payload_size, "%s", message);
-  return udp_packet;
-}
 
-void set_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
-  udp_packet->header.checksum = calculate_udp_checksum(ip_header, udp_packet);
+  udp_packet->header.checksum = calculate_udp_checksum(dest_ip, udp_packet);
+
+  return udp_packet;
 }
 
 void send_message(int sockfd, const char *dest_ip, const char *dest_port,
                   const char *message, int src_port) {
-  udp_datagram *udp_packet = prepare_udp_packet(message, dest_port, src_port);
+  sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
+  uint32_t dest_addr_as_int = dest_addr.sin_addr.s_addr;
+
+  udp_datagram *udp_packet =
+      prepare_udp_packet(message, dest_addr_as_int, dest_port, src_port);
   ip *ip_header =
       prepare_ip_packet(dest_ip, udp_packet, udp_packet->header.length);
-
-  // Compute UDP checksum in new location
-  udp_packet = (udp_datagram *)((char *)ip_header + sizeof(ip));
-  set_udp_checksum(ip_header, udp_packet);
   char *datagram = (char *)ip_header;
-
-  sockaddr_in dest_addr = prepare_dest_addr(dest_ip);
 
   if (sendto(sockfd, datagram, ntohs(ip_header->ip_len), 0,
              (sockaddr *)&dest_addr, sizeof(dest_addr)) < 0) {

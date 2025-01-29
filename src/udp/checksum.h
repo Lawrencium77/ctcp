@@ -12,4 +12,4 @@ typedef struct __attribute__((packed, aligned(2))) {
   uint16_t udp_length;
 } udp_pseudo_header;
 
-uint16_t calculate_udp_checksum(ip *ip_header, udp_datagram *udp_packet);
+uint16_t calculate_udp_checksum(uint32_t dest_ip, udp_datagram *udp_packet);
