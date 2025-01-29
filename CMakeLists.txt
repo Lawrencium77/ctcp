@@ -22,11 +22,11 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/udp/server
 )
 
-add_executable(ip_server src/ip/server.c)
-add_executable(ip_client src/ip/client.c)
-add_executable(udp_daemon src/udp/server/daemon.c src/udp/checksum.c)
-add_executable(udp_server src/udp/server/server.c src/udp/checksum.c)
-add_executable(udp_client src/udp/client/client.c src/udp/checksum.c src/udp/client/client_ports.c)
+add_executable(ip_server src/ip/server.c src/utils.c)
+add_executable(ip_client src/ip/client.c src/ip/client_utils.c src/utils.c)
+add_executable(udp_daemon src/udp/server/daemon.c src/udp/checksum.c src/utils.c)
+add_executable(udp_server src/udp/server/server.c src/udp/checksum.c src/utils.c)
+add_executable(udp_client src/udp/client/client.c src/udp/checksum.c src/udp/client/client_ports.c src/utils.c)
 
 set_target_properties(ip_server PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/ip"
