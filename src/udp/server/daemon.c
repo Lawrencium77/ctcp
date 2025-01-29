@@ -13,9 +13,9 @@
 #include <unistd.h>
 
 #include "checksum.h"
+#include "ip_socket.h"
 #include "server_common.h"
 #include "types.h"
-#include "utils.h"
 
 #define MAX_SERVERS 10
 
@@ -124,9 +124,9 @@ void handle_new_server() {
   }
 }
 
-int validate_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
+int validate_udp_checksum(uint32_t dest_ip, udp_datagram *udp_packet) {
   uint16_t client_checksum = udp_packet->header.checksum;
-  uint16_t server_checksum = calculate_udp_checksum(ip_header, udp_packet);
+  uint16_t server_checksum = calculate_udp_checksum(dest_ip, udp_packet);
 
   if (client_checksum == server_checksum) {
     return 0;
@@ -156,7 +156,7 @@ void handle_new_data() {
   }
 
   udp_datagram *udp_packet = (udp_datagram *)(buffer + ip_header_len);
-  if (validate_udp_checksum(ip_header, udp_packet) != 0) {
+  if (validate_udp_checksum(ip_header->ip_dst.s_addr, udp_packet) != 0) {
     printf("Invalid UDP checksum, dropping packet\n");
     return;
   }

@@ -1,0 +1,6 @@
+uint8_t ip_tos;        /* type of service */
+unsigned short ip_len; /* total length */
+unsigned short ip_id;  /* identification */
+unsigned short ip_off; /* fragment offset field */
+uint8_t ip_ttl;        /* time to live */
+uint8_t ip_p;          /* protocol */

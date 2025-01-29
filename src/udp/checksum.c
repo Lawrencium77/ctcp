@@ -3,7 +3,7 @@
 #include <string.h>
 
 // See https://en.wikipedia.org/wiki/User_Datagram_Protocol#Checksum_computation
-uint16_t calculate_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
+uint16_t calculate_udp_checksum(uint32_t dest_ip, udp_datagram *udp_packet) {
   uint32_t checksum = 0;
   uint16_t *ptr;
   int udp_length = udp_packet->header.length;
@@ -12,7 +12,7 @@ uint16_t calculate_udp_checksum(ip *ip_header, udp_datagram *udp_packet) {
 
   udp_pseudo_header pseudo_header;
   pseudo_header.src_ip = 0;
-  pseudo_header.dest_ip = ip_header->ip_dst.s_addr;
+  pseudo_header.dest_ip = dest_ip;
   pseudo_header.zero = 0;
   pseudo_header.protocol = IPPROTO_RAW;
   pseudo_header.udp_length = udp_length;
