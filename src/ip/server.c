@@ -10,8 +10,11 @@ void print_payload(char *buffer, sockaddr_in src_addr) {
          buffer + header_len);
 }
 
-void read_loop(int sockfd, sockaddr_in src_addr, socklen_t addr_len) {
+void read_loop(int sockfd) {
   printf("Server listening...\n");
+
+  sockaddr_in src_addr;
+  socklen_t addr_len = sizeof(src_addr);
 
   // Slight overestimate as buffer only needs to be as large as the largest
   // possible *payload*
@@ -33,11 +36,7 @@ void read_loop(int sockfd, sockaddr_in src_addr, socklen_t addr_len) {
 
 int main() {
   int sockfd = create_ip_socket();
-  sockaddr_in src_addr;
-  socklen_t addr_len = sizeof(src_addr);
-
-  read_loop(sockfd, src_addr, addr_len);
-
+  read_loop(sockfd);
   close(sockfd);
   return 0;
 }
